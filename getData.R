@@ -5,15 +5,21 @@ library(lubridate)
 library(dplyr)
 
 # Get link of the match
-URL = "https://fbref.com/en/matches/fa531c8b/Barracas-Central-CC-Cordoba-June-3-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool"
+URL = "https://fbref.com/en/matches/b71024e7/Caracas-Atletico-Paranaense-April-5-2022-Copa-Libertadores"
 #https://fbref.com/en/matches/43e41f41/Boca-Juniors-Arsenal-June-5-2022-Primera-Division
 #https://fbref.com/en/matches/fa531c8b/Barracas-Central-CC-Cordoba-June-3-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
 #https://fbref.com/en/matches/8a5c877e/Tucuman-Colon-June-4-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
 #https://fbref.com/en/matches/8dbd30f4/San-Lorenzo-Independiente-June-4-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
+# https://fbref.com/en/matches/b71024e7/Caracas-Atletico-Paranaense-April-5-2022-Copa-Libertadores
+
+
 
 
 getGameFrame <- function(URL)
 {
+## Select country
+country_name = "Argentina"
+
 # Read the page
 page = read_html(URL)
 
@@ -88,5 +94,9 @@ colnames(game_frame2)[c(3,4)] = c("player", "min")
 
 ### AND NOW (!!!) aggregate all data to one dataframe
 game_frame = rbind(game_frame, game_frame2)
+
+# Add country name
+game_frame = cbind(game_frame, country = country_name)
+
 game_frame
 }

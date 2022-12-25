@@ -5,7 +5,7 @@ library(lubridate)
 library(dplyr)
 
 
-URL = read.csv("football_links.csv")
+URL = read.csv("football_links2.csv")
 
 # Add game logs to the one big frame
 i <- 1
@@ -20,5 +20,5 @@ while(i <= nrow(URL)) {
 }
 
 big_data = do.call(rbind,  game_frames)
-saveRDS(big_data, "all_games_2022")
-qq = readRDS("all_games_2022")
+saveRDS(big_data, "all_games_2021")
+qq = readRDS("all_games_2021")

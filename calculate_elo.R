@@ -1,11 +1,15 @@
 library(dplyr)
 library(tibble)
+library(PlayerRatings)
 
 
 # Select a game
 
 ## Load data frame
-games = readRDS("all_games_2022")
+games = readRDS("all_games_2021")
+
+## Select country
+country = "Argentina"
 
 # Code to change Gozalez
 ### games$player[games$player == "Francisco González" & games$team == 'CC Córdoba'] <- "Francisco González 2"
@@ -126,5 +130,6 @@ current_game$PlayerRateAfter =
 calc_data = rbind(calc_data, current_game)
 }
 
+
 # save results to RDS
-saveRDS(calc_data, "arg_season_2022_rating")
+saveRDS(calc_data, "arg_season_2021-22_rating")
