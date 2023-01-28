@@ -6,106 +6,13 @@ library(reactable)
 library(htmltools)
 library(stringr)
 
-# Select a game
-## Load data with older calculations
-#all_data = read.csv(file = "all.csv")
-all_data = readRDS("all_last_22_23.RData")
-all_data = all_data %>% as.data.frame()
-all_data$game_date = as.POSIXct(all_data$game_date,format="%Y-%m-%d")
-#### ADD RATES AFTER A GAME
-
-# select how long was the game
-game_min = 113
-## Team #1 Input data manually
-current_date = "2023-01-24"
-team = "Patronato"
-rival = "Gimnasia y Tiro"
-result1 = "w"
-country1 = "Argentina"
-country2 = "Argentina"
-after_rates1 = all_data[0,]
-players_after = c("Lautaro Geminiani",
-                  "Sergio Maximiliano Ojeda",
-                  "Matías Budiño",
-                  "Facundo Cobos",
-                  "Alexander Sosa",
-                  "Lucas Kruspzky",
-                  "Jorge Valdez Chamorro",
-                  "Ignacio Russo",
-                  "Lautaru Comas",
-                  "Enzo Roberto Díaz",
-                  "Nicolás Domingo",
-                  "Brian Nievas",
-                  "Nazareno Solís",
-                  "Kevin González",
-                  "Cristian González",
-                  "Gastón Novero")
-mins_after = c("113", "113", "113", "39", "39", "113", "85", "85", "28", "74", "113", "28", "57", "74", "113", "56")
-
-## Calculate player rate before
-for(i in 1:length(players_after)) {       # for-loop over columns
-  
-  ## Add row for next player
-  after_rates1[i,] <- NA
-  after_rates1$game_date[i] = current_date
-  after_rates1$team[i] = team
-  after_rates1$rival[i] = rival
-  after_rates1$min[i] = mins_after[i]
-  after_rates1$player[i] = players_after[i]
-  after_rates1$result[i] = result1
-  after_rates1$country[i] = country1
-}
-
-## Team #2 Input data manually
-current_date = "2023-01-24"
-team2 = "Gimnasia y Tiro"
-rival2 = "Patronato"
-result2 = "l"
-after_rates2 = all_data[0,]
-after_rates2$team = as.character(after_rates2$team)
-players_after2 = c("Federico Cosentino",
-                   "Fabricio Rojas",
-                   "Ignacio Sanabria",
-                   "Adolfo Tallura",
-                   "Wálter Busse",
-                   "Ezequiel Cérica",
-                   "Daniel Carrasco",
-                   "Matías Birge",
-                   "Guido Milán",
-                   "Daniel Abello",
-                   "Ruben Villarreal",
-                   "Facundo Heredia",
-                   "Emiliano Blanco",
-                   "Ivo Chavés",
-                   "Adrián Toloza",
-                   "Joel Martínez")
-mins_after2 = c("113","72","41","113","113","113","85", "28", "113", "85", "28","72", "61", "113", "52", "61")
-
-## Calculate player rate before
-for(i in 1:length(players_after2)) {       # for-loop over columns
-  
-  ## Add row for next player
-  after_rates2[i,] <- NA
-  after_rates2$game_date[i] = current_date
-  after_rates2$team[i] = team2
-  after_rates2$rival[i] = rival2
-  after_rates2$min[i] = mins_after2[i]
-  after_rates2$player[i] = players_after2[i]
-  after_rates2$result[i] = result2
-  after_rates2$country[i] = country2
-}
-
-### Aggregate all
-games = rbind(after_rates1, after_rates2)
-
-
-
-
 ########### HERE START AGG WITH PREPARED DATA FRAME!!!!!!!! ##################
 
 
 ###########                               ####################
 ## Create empty dataframe with same columns to make furthermore calculated table
+## Attention!!!!!
+games = readRDS("data/LPFA22.RDS")
 calc_data <- games[0,]
 
 ## Define all game pairs (team * date)
@@ -128,9 +35,9 @@ for (k in 1:nrow(game_pairs))
     
     ## Select player
     current_player = current_game$player[i]
-    
+    current_link = current_game$link[i]
     # Find before occurrences
-    rate_before = all_data %>% filter(game_date < current_date & player == current_player) %>% arrange(desc(game_date))
+    rate_before = calc_data %>% filter(game_date < current_date & link == current_link) %>% arrange(desc(game_date))
     
     # If there is now rating then starting rating is 1500
     if (nrow(rate_before) == 0)
@@ -156,9 +63,10 @@ for (k in 1:nrow(game_pairs))
     
     ## Select player
     current_player = current_rival_game$player[i]
+    current_link = current_rival_game$link[i]
     
     # Find before occurrences
-    rate_before = all_data %>% filter(game_date < current_date & player == current_player) %>% arrange(desc(game_date))
+    rate_before = calc_data %>% filter(game_date < current_date & link == current_link) %>% arrange(desc(game_date))
     
     # If there is now rating then starting rating is 1500
     if (nrow(rate_before) == 0)
@@ -210,19 +118,19 @@ for (k in 1:nrow(game_pairs))
   
   
   calc_data = rbind(calc_data, current_game)
-  saveRDS(calc_data, "calc_data.RData")
+  #saveRDS(calc_data, "data/calc_data.RData")
 }
 
 ## Add to history
 hist_data = readRDS("arg_season_2022_23_rating")
 hist_data = rbind(hist_data, calc_data)
 
-# save only manual
-#saveRDS(hist_data, "arg_season_2022_23_rating")
+# SAVE ONLY MANUAL
+#saveRDS(hist_data, "data/arg_season_2022_23_rating")
 
 # Filter duplicated
 # Filter by team
-players_unique = unique(hist_data[c("player", "team")])
+players_unique = unique(hist_data[c("player", "team", "link")])
 
 # Init data frame
 all_last_p_rates = hist_data[0,]
@@ -231,10 +139,10 @@ all_last_p_rates = hist_data[0,]
 for (i in 1:nrow(players_unique))
 {
   # Find player last rating
-  player_name = players_unique$player[i]
+  player_link = players_unique$link[i]
   
   # Filter by player
-  player_rate = hist_data %>% filter(player == player_name) %>%  arrange(desc(game_date))
+  player_rate = hist_data %>% filter(link == player_link) %>%  arrange(desc(game_date))
   
   # Add player i rate
   last_player_rate = player_rate[1,]
@@ -248,7 +156,7 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
-saveRDS(all_last_p_rates, "all.RData")
+saveRDS(all_last_p_rates, "data/last_SW.RData")
 
 
 calc_data <- readRDS("calc_data.RData")
