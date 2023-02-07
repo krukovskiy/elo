@@ -156,7 +156,8 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
-saveRDS(all_last_p_rates, "data/last_SW.RData")
+# save only manual
+#saveRDS(all_last_p_rates, "data/last_22_SW.RData")
 
 
 calc_data <- readRDS("calc_data.RData")

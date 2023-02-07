@@ -8,15 +8,13 @@ library(polite)
 ## Initial
 competition_name = "Liga Profesional De Fútbol Argentina"
 URL = readRDS("data/urls_1_22_sw.RData")
-u2 = readRDS("data/urls_f_22_sw.RData")
+u2 = readRDS("data/urls_2_22_sw.RData")
 URL = append(URL,u2)
 
 # Add game logs to the one big frame
 i <- 1
 
 # Be polite
-
-
 
 # Call these variables cause we use them furthermore
 cur_frame <- c()

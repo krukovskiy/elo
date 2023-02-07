@@ -4,9 +4,9 @@
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data28012022.RData")
-#URL = readRDS("data/file")
-URL = read.csv2("data/links28012022.csv", header = FALSE)$V1
+calc_data <- readRDS("data/calc_data05022023.RData")
+#URL = "https://int.soccerway.com/matches/2023/02/05/argentina/primera-division/boca-juniors/club-atletico-central-cordoba-de-santiago/3982559/"
+URL = read.csv2("data/links07022023.csv", header = FALSE)$V1
 
 # Add game logs to the one big frame
 i <- 1
@@ -131,7 +131,7 @@ for (k in 1:nrow(game_pairs))
   
   calc_data = rbind(calc_data, current_game)
   ## SAVE ONLY MANUALLY
-  #saveRDS(calc_data, "data/calc_data28012022.RData")
+  #saveRDS(calc_data, "data/calc_data07022023.RData")
 }
 
 
@@ -164,4 +164,4 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW28012022.RData")
+#saveRDS(all_last_p_rates, "data/lastSW07022023.RData")

@@ -1,6 +1,6 @@
 ---
-title: ''
-date: ""
+title: 'Actualización de calificación Elo: CA Patronato'
+date: "20-01-2024"
 output:
   html_document: default
   word_document: default
@@ -25,40 +25,28 @@ library(reactable)
 library(htmltools)
 ```
 
-### Personal Elo calificación: 07-02-2023
+### Plantel Elo calificación: 31-01-2023
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW07022023.RData")
+t_data <- readRDS("data/lastSW07022023.RData")
+# create special dataframe
+t_data = t_data %>% filter(game_date > "2023-02-02" & competition == "Liga Profesional Argentina" & min > 0)
+t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
+t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])
+# Add team logo
+t_data2$logo = paste0(t_data2$team, ".png")
+t_data2 = t_data2 %>% arrange(desc(TeamRateAfter)) %>% mutate(rank = row_number()) %>% relocate(rank, .before = team) %>% relocate(logo, .after = rank) 
+
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-02-02" & competition == "Liga Profesional Argentina" & min > 0)
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
 )
-# create special dataframe
-ctd = inp_data[,c("team", "player", "game_date" , "min","PlayerRateAfter","result")]
-ctd$diff = inp_data$PlayerRateAfter - inp_data$PlayerRateBefore
-ctd = ctd %>% relocate(diff, .after = result) 
-ctd$photo = ""
-ctd$PlayerRateAfter = round(ctd$PlayerRateAfter,1)
-ctd$diff = round(ctd$diff,1)
-ctd = ctd %>% relocate(photo, .after = team)
-ctd = ctd %>% arrange(desc(PlayerRateAfter))
 
+qr = c( min(t_data2$diff) + (((max(t_data2$diff) - min(t_data2$diff)) / 3)),min(t_data2$diff) + (((max(t_data2$diff) - min(t_data2$diff)) / 3))*2)
 
-# top_n
-#ctd[1:10,]$photo = c("rpcasco", "slhernandez", "rinsua", "bjvilla", "slcerutti", "rmoreno", "rsigali", "bjadvincula", "dyjasoto", "bjfigal")
-#TOP 15
-ctd[1:15,]$photo = c("dyjasoto", "rpcasco", "hgsoto", "bjvilla", "slcerutti","slhernandez","bjadvincula", "rhauche", "tluciatti", "rmoreno", "ccrius","bjfernandez", "bjfigal", "hchavez","rsigali")
-
-
-#                                       +1 because of hours difference
-ctd$game_date = as.Date(ctd$game_date) +1
-ctd$game_date = format(as.Date(ctd$game_date), "%d-%m")
-qr = c( min(ctd$diff) + (((max(ctd$diff) - min(ctd$diff)) / 3)),min(ctd$diff) + (((max(ctd$diff) - min(ctd$diff)) / 3))*2)
-top_n = ctd[1:15,]
-top_n$doge = case_when(top_n$diff < qr[1] ~ "wd",
-                       top_n$diff >= qr[1] & top_n$diff < qr[2]~ "ud",
-                       top_n$diff >= qr[2] ~ "sd")
+t_data2$doge = case_when(t_data2$diff < qr[1] ~ "wd",
+                       t_data2$diff >= qr[1] & t_data2$diff < qr[2]~ "ud",
+                       t_data2$diff >= qr[2] ~ "sd")
 make_color_pal <- function(colors, bias = 1) {
   get_color <- colorRamp(colors, bias = bias)
   function(x) rgb(get_color(x), maxColorValue = 255)
@@ -75,11 +63,12 @@ off_rating_color <- make_color_pal(c("#ff2700", "#f8fcf8", "#44ab43"), bias = 1.
 BuYlRd <- function(x) rgb(colorRamp(c("#7fb7d7", "#ffffbf", "#fc8d59"))(x), maxColorValue = 255)
 
 reactable(
-  top_n,
+  t_data2,
   columns = list(
-    team = colDef(name = "Equipo",
+    rank = colDef(name = "#"),
+    logo = colDef(name = "",
       cell = function(value) {
-        img_src <- knitr::image_uri(sprintf("logo/%s.png", value))
+        img_src <- knitr::image_uri(sprintf("logo/%s", value))
         image <- img(src = img_src, style = "height: 48px;", alt = value)
         tagList(
           div(style = "display: inline-block; width: 48px", image)
@@ -88,23 +77,10 @@ reactable(
       align = "center",
       maxWidth = 64
     ),
-    photo = colDef(name = "",
-                   cell = function(value) { img_src <- knitr::image_uri(sprintf("players/top15/%s.png", value))
-                   image <- img(src = img_src, style = "height: 57px", alt = value)
-                   tagList(
-                     div(style = "display: inline-block; width: 57px", image))
-                   },
-                   maxWidth = 64
-                   ),
-    player = colDef(name = "Jugador",
+    team = colDef(name = "Equipo",
                       maxWidth = 110,
                    style = list(color = color, fontWeight = "bold")),
-    game_date = colDef(name = "Último partido",
-                       maxWidth = 65),
-    min = colDef(name = "Min.",
-                 format = colFormat(digits = 0),
-                 maxWidth = 55),
-    result = colDef(name = "Resultado",
+    result = colDef(name = "Último partido",
       cell = function(value) {
         img_src <- knitr::image_uri(sprintf("result/%s.png", value))
         image <- img(src = img_src, style = "height: 20px;", alt = value)
@@ -115,7 +91,7 @@ reactable(
       align = "center",
       maxWidth = 64
     ),
-    PlayerRateAfter = colDef(name = "Pers. Elo",
+    TeamRateAfter = colDef(name = "Plantel Elo",
                              maxWidth = 90,
                              format = colFormat(digits = 1),
                              align = "right",
@@ -125,7 +101,7 @@ reactable(
       name = "+ / -",
       cell = function(value) {
         if (value >= 0) paste0("+", value) else value
-        scaled <- (value - min(ctd$diff)) / (max(ctd$diff) - min(ctd$diff))
+        scaled <- (value - min(t_data2$diff)) / (max(t_data2$diff) - min(t_data2$diff))
         color <- off_rating_color(scaled)
         value <- format(round(value, 1), nsmall = 1)
         div(class = "spi-rating", style = list(background = color, fontWeight = "bold"), value)
@@ -144,12 +120,11 @@ reactable(
     )
     ),
   defaultColDef = colDef(headerStyle = list(fontWeight=200), vAlign = "center"),
-  defaultSorted = "PlayerRateAfter",
+  defaultSorted = "TeamRateAfter",
   defaultSortOrder = "desc",
   borderless = TRUE,
-  height = 900,
-  defaultPageSize = 5,
-  
+  height = 600,
+  defaultPageSize = 7,
   #
   style = list(fontFamily = "Karla, Helvetica Neue"
               ),

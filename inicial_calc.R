@@ -3,7 +3,7 @@ library(tidyverse)
 ## Calculate iniciales
 
 # Load base
-rating_data = readRDS("arg_season_2022_rating")
+rating_data = readRDS("data/calc_data28012022.RData")
 
 ## Create empty frame
 inicial_rates = rating_data[0,]
@@ -11,10 +11,10 @@ inicial_rates = rating_data[0,]
 rival_rates = rating_data[0,]
 
 ## Team #1
-current_date = "2023-01-07"
-team = "Independiente"
-rival = "Boca Juniors"
-players_inicio = c("Rodrigo Rey",
+current_date = "2023-01-29"
+team = "River Plate"
+rival = "Central Córdoba SdE"
+players_inicio = c("/players/franco-armani/51301/",
                    "Luciano Gómez",
                    "Sergio Barreto",
                    "Edgar Elizalde",
@@ -101,3 +101,6 @@ rival_rates$TeamRateBefore = sum(rival_rates$PlayerRateBefore) / 11
 
 ## Add rival to dataframe!
 inicial_rates = rbind(inicial_rates, rival_rates)
+
+
+

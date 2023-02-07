@@ -65,12 +65,14 @@ sub_players =  data.frame(link_out = rank_home %>% html_node(".substitute-out") 
 sub_players = na.omit(sub_players)
 
 # Add and clean minuts of subs
+t_home[1:11,3] = 90
 t_home = left_join(t_home, sub_players, by = c("name"="name_out"))
-t_home$min = t_home$min_out
+tosub_index = which(!is.na(t_home$min_out[1:11]))
+t_home$min[tosub_index] = t_home$min_out[tosub_index]
 t_home[sub_index,] = data.frame(sub_players$link_in, sub_players$name_in, sub_players$min_in)
 t_home = t_home[,1:3]
-# Fill other guys with 90 mins
-t_home[is.na(t_home)] = 90
+# Fill other guys with 0 mins
+t_home[is.na(t_home)] = 0
 
 
 ## Make rival!
@@ -91,12 +93,14 @@ sub_players_aw =  data.frame(link_out = rank_away %>% html_node(".substitute-out
 sub_players_aw = na.omit(sub_players_aw)
 
 # Add and clean minuts of subs
+t_away[1:11,3] = 90
 t_away = left_join(t_away, sub_players_aw, by = c("name"="name_out"))
-t_away$min = t_away$min_out
+tosub_aw_index = which(!is.na(t_away$min_out[1:11]))
+t_away$min[tosub_aw_index] = t_away$min_out[tosub_aw_index]
 t_away[sub_index_aw,] = data.frame(sub_players_aw$link_in, sub_players_aw$name_in, sub_players_aw$min_in)
 t_away = t_away[,1:3]
-# Fill other guys with 90 mins
-t_away[is.na(t_away)] = 90
+# Fill other guys with 0 mins
+t_away[is.na(t_away)] = 0
 
 
 ## 2. Scrap date, result

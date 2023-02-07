@@ -14,7 +14,7 @@ library(ggimage)
 library(data.table)
 
 # Load rating data
-rating_data = readRDS("arg_season_2022_rating")
+rating_data = readRDS("arg_season_2022_23_rating")
 
 # Add necessary fonts
 font_add_google("Open Sans", family = "special")
