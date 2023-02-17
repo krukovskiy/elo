@@ -5,6 +5,7 @@ library(lubridate)
 library(dplyr)
 library(httr)
 library(parsedate)
+library(data.table)
 
 # Get link of the match
 URL = "https://int.soccerway.com/matches/2022/10/01/argentina/primera-division/club-atletico-san-lorenzo-de-almagro/club-atletico-huracan/3791029/"
@@ -55,10 +56,10 @@ sub_index = which(!is.na(rank_home %>% html_node(".substitute-out") %>% html_nod
 # Create list of subs
 sub_players =  data.frame(link_out = rank_home %>% html_node(".substitute-out") %>% html_node("a") %>% html_attr("href"),
                           name_out = rank_home %>% html_node(".substitute-out") %>% html_node("a") %>% html_text2(),
-                          min_out = str_extract((rank_home %>% html_node(".substitute-out") %>% html_text()), "([0-9]).", group = NULL),
+                          min_out = str_extract((rank_home %>% html_node(".substitute-out") %>% html_text()), "([0-9])+", group = NULL),
                           link_in = rank_home %>% html_node(".substitute a") %>% html_attr("href"),
                           name_in = rank_home %>% html_node(".substitute a")  %>% html_text2(),
-                          min_in = 90 - as.numeric(str_extract((rank_home %>% html_node(".substitute-out") %>% html_text()), "([0-9]).", group = NULL))
+                          min_in = 90 - as.numeric(str_extract((rank_home %>% html_node(".substitute-out") %>% html_text()), "([0-9])+", group = NULL))
                           )
                           
 # Delete NA
@@ -73,7 +74,12 @@ t_home[sub_index,] = data.frame(sub_players$link_in, sub_players$name_in, sub_pl
 t_home = t_home[,1:3]
 # Fill other guys with 0 mins
 t_home[is.na(t_home)] = 0
-
+#Count red card time of the exit from the pitch
+home_red_min = data.frame(event = page %>% read_html() %>% html_nodes(".left .bookings") %>% html_node("img") %>% html_attr("src"),
+                   min = str_extract(page %>% read_html() %>% html_nodes(".left .bookings")  %>% html_text2(), "([0-9])+", group = NULL))
+home_red_min = home_red_min[c(-1,-13),]
+red_player_index = which(home_red_min$event %like% "RC.png")
+t_home$min[red_player_index] = home_red_min$min[red_player_index]
 
 ## Make rival!
 # Find player which were substituted
@@ -83,10 +89,10 @@ sub_index_aw = which(!is.na(rank_away %>% html_node(".substitute-out") %>% html_
 # Create list of subs
 sub_players_aw =  data.frame(link_out = rank_away %>% html_node(".substitute-out") %>% html_node("a") %>% html_attr("href"),
                           name_out = rank_away %>% html_node(".substitute-out") %>% html_node("a") %>% html_text2(),
-                          min_out = str_extract((rank_away %>% html_node(".substitute-out") %>% html_text()), "([0-9]).", group = NULL),
+                          min_out = str_extract((rank_away %>% html_node(".substitute-out") %>% html_text()), "[0-9]+", group = NULL),
                           link_in = rank_away %>% html_node(".substitute a") %>% html_attr("href"),
                           name_in = rank_away %>% html_node(".substitute a")  %>% html_text2(),
-                          min_in = 90 - as.numeric(str_extract((rank_away %>% html_node(".substitute-out") %>% html_text()), "([0-9]).", group = NULL))
+                          min_in = 90 - as.numeric(str_extract((rank_away %>% html_node(".substitute-out") %>% html_text()), "[0-9]+", group = NULL))
 )
 
 # Delete NA
@@ -101,7 +107,12 @@ t_away[sub_index_aw,] = data.frame(sub_players_aw$link_in, sub_players_aw$name_i
 t_away = t_away[,1:3]
 # Fill other guys with 0 mins
 t_away[is.na(t_away)] = 0
-
+# Count time whe red card
+away_red_min = data.frame(event = page %>% read_html() %>% html_nodes(".right .bookings") %>% html_node("img") %>% html_attr("src"),
+                          min = str_extract(page %>% read_html() %>% html_nodes(".right .bookings")  %>% html_text2(), "([0-9])+", group = NULL))
+away_red_min = away_red_min[c(-1,-13),]
+red_player_index2 = which(away_red_min$event %like% "RC.png")
+t_away$min[red_player_index2] = away_red_min$min[red_player_index2]
 
 ## 2. Scrap date, result
 ## Find date from "page"
@@ -115,10 +126,39 @@ game_date = game_date = strptime(game_date_raw, "%d/%m/%Y")
 ## Scrap result
 game_result_raw = page %>%  read_html() %>% html_nodes(".bidi") %>% html_text()
 game_result_raw = as.numeric(str_split(game_result_raw, " - ", simplify = TRUE))
+
+
 # Determine the winner (or loser)
 result = ifelse(game_result_raw[1] > game_result_raw[2], "w",
                 ifelse(game_result_raw[1] == game_result_raw[2], "d", "l")
                 )
+## !!!!!!!!!!!!!!!!! DONT FORGET !!!!!!!!!!!!!
+result_a = ifelse(game_result_raw[2] > game_result_raw[1], "w",
+                  ifelse(game_result_raw[2] == game_result_raw[1], "d", "l"))
+
+## Work with cups (penalties)
+pen_win = page %>%  read_html() %>% html_nodes(".scoretime") %>% html_children() %>% html_attr("class")
+pen_win_index = str_detect(pen_win, "addition-visible")
+### result home
+
+result = case_when(
+  pen_win_index[2] == TRUE & pen_win_index[3] == FALSE ~ "p1",
+  pen_win_index[2] == FALSE & pen_win_index[3] == TRUE ~ "p0",
+  game_result_raw[1] > game_result_raw[2] ~ "w",
+  game_result_raw[2] == game_result_raw[1] ~ "d", 
+  game_result_raw[1] < game_result_raw[2] ~ "l"
+  
+)
+
+### result away
+result_a = case_when(
+  pen_win_index[2] == FALSE & pen_win_index[3] == TRUE ~ "p1",
+  pen_win_index[2] == TRUE & pen_win_index[3] == FALSE ~ "p0",
+  game_result_raw[2] > game_result_raw[1] ~ "w",
+  game_result_raw[2] == game_result_raw[1] ~ "d", 
+  game_result_raw[2] < game_result_raw[1] ~ "l"
+  
+)              
 
 ## Aggregate data to one data frame
 game_frame = data.frame(game_date,
@@ -131,13 +171,7 @@ game_frame = data.frame(game_date,
                    score_a = game_result_raw[2], 
                    result)
 
-## A little weird way to rename columns
 
-
-## !!!!!!!!!!!!!!!!! DONT FORGET !!!!!!!!!!!!!
-result_a = ifelse(game_result_raw[2] > game_result_raw[1], "w",
-                  ifelse(game_result_raw[2] == game_result_raw[1], "d", "l")
-)
 #### Now we make the same with the second team, but rival will be change
 game_frame2 = data.frame(game_date,
                         team = rival, 

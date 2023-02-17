@@ -25,11 +25,11 @@ library(reactable)
 library(htmltools)
 ```
 
-### Personal Elo calificación: 07-02-2023
+### Personal Elo calificación: 15-02-2023
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW07022023.RData")
+inp_data <- readRDS("data/lastSW13022023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-02-02" & competition == "Liga Profesional Argentina" & min > 0)
+inp_data = inp_data %>% filter(game_date > "2023-02-10" & competition == "Liga Profesional Argentina" & min > 0)
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
@@ -48,7 +48,8 @@ ctd = ctd %>% arrange(desc(PlayerRateAfter))
 # top_n
 #ctd[1:10,]$photo = c("rpcasco", "slhernandez", "rinsua", "bjvilla", "slcerutti", "rmoreno", "rsigali", "bjadvincula", "dyjasoto", "bjfigal")
 #TOP 15
-ctd[1:15,]$photo = c("dyjasoto", "rpcasco", "hgsoto", "bjvilla", "slcerutti","slhernandez","bjadvincula", "rhauche", "tluciatti", "rmoreno", "ccrius","bjfernandez", "bjfigal", "hchavez","rsigali")
+ctd[1:15,]$photo = c("dyjasoto", "rpcasco", "slhernandez", "slcerutti", "hgsoto",  "rmura","bjvilla", "rhauche",
+                    "rparmani",  "rsigali", "hchavez", "ccrius", "tcastro",  "hfattori",  "bjgfernandez")
 
 
 #                                       +1 because of hours difference

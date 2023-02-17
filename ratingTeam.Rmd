@@ -27,9 +27,9 @@ library(htmltools)
 
 ### Plantel Elo calificación: 31-01-2023
 ```{r echo=FALSE}
-t_data <- readRDS("data/lastSW07022023.RData")
+t_data <- readRDS("data/lastSW13022023.RData")
 # create special dataframe
-t_data = t_data %>% filter(game_date > "2023-02-02" & competition == "Liga Profesional Argentina" & min > 0)
+t_data = t_data %>% filter(game_date > "2023-02-10" & competition == "Liga Profesional Argentina" & min > 0)
 t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
 t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])
 # Add team logo
