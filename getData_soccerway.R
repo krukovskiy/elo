@@ -8,17 +8,12 @@ library(parsedate)
 library(data.table)
 
 # Get link of the match
-URL = "https://int.soccerway.com/matches/2022/10/01/argentina/primera-division/club-atletico-san-lorenzo-de-almagro/club-atletico-huracan/3791029/"
-#https://fbref.com/en/matches/43e41f41/Boca-Juniors-Arsenal-June-5-2022-Primera-Division
-#https://fbref.com/en/matches/fa531c8b/Barracas-Central-CC-Cordoba-June-3-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
-#https://fbref.com/en/matches/8a5c877e/Tucuman-Colon-June-4-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
+URL = "https://el.soccerway.com/matches/2023/02/19/argentina/primera-division/newell-s-old-boys/ca-banfield/3982591/"
+#"https://el.soccerway.com/matches/2023/02/19/argentina/primera-division/newell-s-old-boys/ca-banfield/3982591/"
 #https://fbref.com/en/matches/8dbd30f4/San-Lorenzo-Independiente-June-4-2022-Primera-Division?utm_source=direct&utm_medium=Share&utm_campaign=ShareTool
 # https://fbref.com/en/matches/b71024e7/Caracas-Atletico-Paranaense-April-5-2022-Copa-Libertadores
 # https://el.soccerway.com/matches/2023/01/25/south-america/sudamericano-u20/argentina-youth/peru-under-20/4007293/
 # https://int.soccerway.com/matches/2022/10/01/argentina/primera-division/club-atletico-san-lorenzo-de-almagro/club-atletico-huracan/3791029/
-
-
-
 
 getGameFrameSW <- function(URL, competition_name)
 {
@@ -33,7 +28,6 @@ page <- GET(URL, add_headers('user-agent' = 'Web scrap for personal project ([[k
 teams = page %>% read_html() %>% html_nodes(".team-title")  %>% html_text2()
 team = teams[1]
 rival = teams[2]
-
 
 # Find home players
 rank_home = page %>% read_html() %>% html_nodes(".left .large-link") 
@@ -75,11 +69,20 @@ t_home = t_home[,1:3]
 # Fill other guys with 0 mins
 t_home[is.na(t_home)] = 0
 #Count red card time of the exit from the pitch
-home_red_min = data.frame(event = page %>% read_html() %>% html_nodes(".left .bookings") %>% html_node("img") %>% html_attr("src"),
-                   min = str_extract(page %>% read_html() %>% html_nodes(".left .bookings")  %>% html_text2(), "([0-9])+", group = NULL))
-home_red_min = home_red_min[c(-1,-13),]
-red_player_index = which(home_red_min$event %like% "RC.png")
-t_home$min[red_player_index] = home_red_min$min[red_player_index]
+t_home$rc=0
+event <- page %>%
+  read_html() %>%
+  html_nodes(".left .bookings img[src*='Y2C.png'], .left .bookings img[src*='RC.png']") 
+name = html_nodes(event, xpath = "../../preceding-sibling::td[1]/a") %>% html_text2()
+e = event %>% html_attr("src")
+min = as.numeric(str_extract(html_nodes(event, xpath = "..") %>% html_text2(), "([0-9])+", group = NULL))
+hrm = data.frame(name, e, min)
+merged_df <- merge(t_home, hrm, by.x = "name", by.y = "name", all.x = TRUE)
+merged_df$min.x[!is.na(merged_df$min.y)] <- merged_df$min.y[!is.na(merged_df$min.y)]
+merged_df$rc <- ifelse(is.na(merged_df$e), 0, 1)
+# Make final home frame
+t_home = merged_df[,1:4]
+colnames(t_home)[3] <- "min"
 
 ## Make rival!
 # Find player which were substituted
@@ -108,11 +111,20 @@ t_away = t_away[,1:3]
 # Fill other guys with 0 mins
 t_away[is.na(t_away)] = 0
 # Count time whe red card
-away_red_min = data.frame(event = page %>% read_html() %>% html_nodes(".right .bookings") %>% html_node("img") %>% html_attr("src"),
-                          min = str_extract(page %>% read_html() %>% html_nodes(".right .bookings")  %>% html_text2(), "([0-9])+", group = NULL))
-away_red_min = away_red_min[c(-1,-13),]
-red_player_index2 = which(away_red_min$event %like% "RC.png")
-t_away$min[red_player_index2] = away_red_min$min[red_player_index2]
+t_away$rc=0
+aevent <- page %>%
+  read_html() %>%
+  html_nodes(".right .bookings img[src*='Y2C.png'], .right .bookings img[src*='RC.png']") 
+aname = html_nodes(aevent, xpath = "../../preceding-sibling::td[1]/a") %>% html_text2()
+ae = aevent %>% html_attr("src")
+amin = as.numeric(str_extract(html_nodes(aevent, xpath = "..") %>% html_text2(), "([0-9])+", group = NULL))
+ahrm = data.frame(aname, ae, amin)
+amerged_df <- merge(t_away, ahrm, by.x = "name", by.y = "aname", all.x = TRUE)
+amerged_df$min[!is.na(amerged_df$amin)] <- amerged_df$amin[!is.na(amerged_df$amin)]
+amerged_df$rc <- ifelse(is.na(amerged_df$ae), 0, 1)
+# Final away frame
+t_away = amerged_df[,1:4]
+colnames(t_away)[3] <- "min"
 
 ## 2. Scrap date, result
 ## Find date from "page"
@@ -166,18 +178,20 @@ game_frame = data.frame(game_date,
                    player = t_home$name, 
                    link = t_home$link, 
                    min = t_home$min, 
+                   rc = t_home$rc,
                    rival = rival, 
                    score_h = game_result_raw[1] ,
                    score_a = game_result_raw[2], 
                    result)
 
 
-#### Now we make the same with the second team, but rival will be change
+#### Now we make the same with the second team, but RIVAL will be change
 game_frame2 = data.frame(game_date,
                         team = rival, 
                         player = t_away$name, 
                         link = t_away$link, 
                         min = t_away$min, 
+                        rc = t_away$rc,
                         rival = team, 
                         score_h = game_result_raw[1] ,
                         score_a = game_result_raw[2], 

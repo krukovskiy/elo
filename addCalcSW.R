@@ -4,9 +4,11 @@
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data14022023.RData")
-#URL = "https://int.soccerway.com/matches/2023/02/05/argentina/primera-division/boca-juniors/club-atletico-central-cordoba-de-santiago/3982559/"
-URL = read.csv2("data/links13022023.csv", header = FALSE)$V1
+calc_data <- readRDS("data/calc_data17022023.RData")
+# calc_data$rc = NA
+# calc_data = calc_data %>% relocate(rc, .after = min) 
+#URL = "https://int.soccerway.com/matches/2023/02/12/argentina/primera-division/club-atletico-rosario-central/arsenal-de-sarandi/3982576/"
+URL = read.csv2("data/links18022023.csv", header = FALSE)$V1
 
 # Add game logs to the one big frame
 i <- 1
@@ -25,7 +27,6 @@ while(i <= length(URL)) {
 big_data = do.call(rbind,  game_frames)
 big_data = big_data %>% arrange(game_date)
 games = big_data
-
 
 ## Define all game pairs (team * date)
 game_pairs = unique(games[c("game_date", "team")])
@@ -61,7 +62,13 @@ for (k in 1:nrow(game_pairs))
   } # end of the FOR loop
   ## Calculate team rate before. DONT FORGET ABOUT GAME_MIN
   current_game$min = as.numeric(current_game$min)
-  current_game$TeamRateBefore = sum(current_game$PlayerRateBefore * (current_game$min/game_min))/ sum(current_game$min/game_min)
+  ## Making calculations for red carders
+  current_game$min_rc = current_game$min
+  current_game = current_game %>% relocate(min_rc, .after = min)
+  current_game$min_rc[which(current_game$rc == 1)] = 90
+  ## Caclculate team rate before
+  current_game$TeamRateBefore = sum(current_game$PlayerRateBefore * (current_game$min_rc/game_min))/ sum(current_game$min_rc/game_min)
+  # have to make condition of red card
   
   ## !!!!!! RIVAL FRAME !!!!!!  Calculate rival rate before
   ## Select RIVAL
@@ -90,12 +97,17 @@ for (k in 1:nrow(game_pairs))
   }
   ## Calculate rival rate before. This formula could be changed. Not sure for 100%
   current_rival_game$min = as.numeric(current_rival_game$min)
-  current_game$RivalRateBefore = sum(current_rival_game$PlayerRateBefore * (current_rival_game$min/game_min))/ sum(current_rival_game$min/game_min)
   
+  # Calculate min rc 
+  current_rival_game$min_rc = current_rival_game$min
+  current_rival_game = current_rival_game %>% relocate(min_rc, .after = min)
+  current_rival_game$min_rc[which(current_rival_game$rc == 1)] = 90
+  ## Caclculate team rate before
+  
+  current_game$RivalRateBefore = sum(current_rival_game$PlayerRateBefore * (current_rival_game$min_rc/game_min))/ sum(current_rival_game$min_rc/game_min)
   
   ## !!!! Calculate TEAM  elo
   ## Create a dataframe with team results history
-  
   # team_history =  games %>% filter(game_date < current_date & team == current_team) %>% arrange(game_date) # no history
   th_short = select(current_game, game_date, team, rival, result)
   
@@ -125,17 +137,37 @@ for (k in 1:nrow(game_pairs))
   
   ## Fill team rate after
   current_game$TeamRateAfter = team_elo$Rating
+  # Team elo diff
+  diff = current_game$TeamRateAfter - current_game$TeamRateBefore
+  diff = diff[1]
+  po = diff*11
+  total_min = 11*game_min
+  min_cost = po/total_min
+ 
+  # Count number of player without red card
+  cnwrc = length(which(current_game$rc == "0" & current_game$min >0))
+ 
+  ## Get red card bonus for other players
+  rcb = 0
+  rcb_index = which(current_game$rc == "1")  
+  rcb = sum(abs(diff * (game_min - current_game[rcb_index,]$min)/game_min))
+  rest_min = game_min * 10
+  min_bonus = rcb/rest_min
+  # Remove min_rc
+  current_game = current_game[,-6]
   
-  ## Fill player rate after
-  current_game$PlayerRateAfter = 
-    current_game$PlayerRateBefore + ((current_game$TeamRateAfter - current_game$TeamRateBefore)*current_game$min) / game_min
-  
+  # Final frame
+  current_game = current_game %>% 
+    mutate(PlayerRateAfter=NA) %>%
+    mutate(PlayerRateAfter=ifelse(rc==1, current_game$PlayerRateBefore + min_cost * current_game$min - rcb,PlayerRateAfter)) %>%
+    mutate(PlayerRateAfter=ifelse(rc==0, current_game$PlayerRateBefore + min_cost * current_game$min + min_bonus*current_game$min*2,PlayerRateAfter)) 
+  # Team Rate After
+  current_game$TeamRateAfter = sum(current_game$PlayerRateAfter * (current_game$min/game_min))/ sum(current_game$min/game_min)
   
   calc_data = rbind(calc_data, current_game)
   ## SAVE ONLY MANUALLY
-  #saveRDS(calc_data, "data/calc_data14022023.RData")
+  #saveRDS(calc_data, "data/calc_data18022023.RData")
 }
-
 
 # Filter duplicated
 # Filter by team
@@ -166,4 +198,4 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW14022023.RData")
+#saveRDS(all_last_p_rates, "data/lastSW18022023.RData")
