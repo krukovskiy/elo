@@ -73,7 +73,7 @@ t_home$rc=0
 event <- page %>%
   read_html() %>%
   html_nodes(".left .bookings img[src*='Y2C.png'], .left .bookings img[src*='RC.png']") 
-name = html_nodes(event, xpath = "../../preceding-sibling::td[1]/a") %>% html_text2()
+name = html_nodes(event, xpath = "../../preceding-sibling::td[1]/a | ../../preceding-sibling::td[1]/p[1]/a") %>% html_text2()
 e = event %>% html_attr("src")
 min = as.numeric(str_extract(html_nodes(event, xpath = "..") %>% html_text2(), "([0-9])+", group = NULL))
 hrm = data.frame(name, e, min)
@@ -115,7 +115,7 @@ t_away$rc=0
 aevent <- page %>%
   read_html() %>%
   html_nodes(".right .bookings img[src*='Y2C.png'], .right .bookings img[src*='RC.png']") 
-aname = html_nodes(aevent, xpath = "../../preceding-sibling::td[1]/a") %>% html_text2()
+aname = html_nodes(aevent, xpath = "../../preceding-sibling::td[1]/a | ../../preceding-sibling::td[1]/p[1]/a") %>% html_text2()
 ae = aevent %>% html_attr("src")
 amin = as.numeric(str_extract(html_nodes(aevent, xpath = "..") %>% html_text2(), "([0-9])+", group = NULL))
 ahrm = data.frame(aname, ae, amin)

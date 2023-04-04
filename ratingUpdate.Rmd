@@ -30,11 +30,11 @@ library(htmltools)
 <br>
 <br>
 
-### Personal Elo calificación: 19-02-2023
+### Personal Elo calificación: 22-03-2023
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW18022023.RData")
+inp_data <- readRDS("data/lastSW03042023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-02-16" & competition == "Liga Profesional Argentina" & min > 0)
+inp_data = inp_data %>% filter(game_date > "2023-03-28" & competition == "Liga Profesional Argentina" & min > 0)
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
@@ -51,11 +51,11 @@ ctd = ctd %>% arrange(desc(PlayerRateAfter))
 
 
 # top_n
-#ctd[1:10,]$photo = c("rpcasco", "slhernandez", "rinsua", "bjvilla", "slcerutti", "rmoreno", "rsigali", "bjadvincula", "dyjasoto", "bjfigal" "dyjasoto" "slhernandez", "slcerutti", "bjvilla", "rhauche", )
+# ctd[1:10,]$photo = c("bjadvincula","bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto" "hgsoto", "rparmani", "rpcasco", "rhauche",  "rmoreno", "rsigali", "rinsua","slhernandez", "slcerutti",  "slgattoni" "slbatalla""slelias",                     "tluciatti", "tcastro" ,   "talfranco", "talsosa")
 #TOP 15
-ctd[1:15,]$photo = c("rpcasco",  "hgsoto",  "rmura", "rparmani",  "rmoreno",
-                     "rhauche", "rsigali", "hchavez", "hfattori", "hhezze",
-                     "htobio", "rpbarco",  "hacevedo",  "rpperez", "tluciatti")
+ctd[1:15,]$photo = c("rpcasco", "rinsua", "dyjasoto", "slhernandez","rmoreno", 
+                     "rparmani", "slcerutti", "rpbarco", "rmura", "rhauche",
+                      "rppdiaz", "ccrius", "pmacagno", "slgattoni", "rpperez")
 
 
 #                                       +1 because of hours difference

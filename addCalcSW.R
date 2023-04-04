@@ -1,14 +1,25 @@
+library(XML)
+library("rvest")
+library(tidyr)
+library(lubridate)
+library(dplyr)
+library(httr)
+library(parsedate)
+library(data.table)
+library(stringr)
+library(PlayerRatings)
+
 ## Add rating to a saved dataset
 
 
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data17022023.RData")
+calc_data <- readRDS("data/calc_data22032023.RData")
 # calc_data$rc = NA
 # calc_data = calc_data %>% relocate(rc, .after = min) 
 #URL = "https://int.soccerway.com/matches/2023/02/12/argentina/primera-division/club-atletico-rosario-central/arsenal-de-sarandi/3982576/"
-URL = read.csv2("data/links18022023.csv", header = FALSE)$V1
+URL = read.csv2("data/links03042023.csv", header = FALSE)$V1
 
 # Add game logs to the one big frame
 i <- 1
@@ -162,11 +173,10 @@ for (k in 1:nrow(game_pairs))
     mutate(PlayerRateAfter=ifelse(rc==1, current_game$PlayerRateBefore + min_cost * current_game$min - rcb,PlayerRateAfter)) %>%
     mutate(PlayerRateAfter=ifelse(rc==0, current_game$PlayerRateBefore + min_cost * current_game$min + min_bonus*current_game$min*2,PlayerRateAfter)) 
   # Team Rate After
-  current_game$TeamRateAfter = sum(current_game$PlayerRateAfter * (current_game$min/game_min))/ sum(current_game$min/game_min)
+  #current_game$TeamRateAfter = sum(current_game$PlayerRateAfter * (current_game$min/game_min))/ sum(current_game$min/game_min)
   
   calc_data = rbind(calc_data, current_game)
-  ## SAVE ONLY MANUALLY
-  #saveRDS(calc_data, "data/calc_data18022023.RData")
+ 
 }
 
 # Filter duplicated
@@ -183,13 +193,17 @@ for (i in 1:nrow(players_unique))
   player_link = players_unique$link[i]
   
   # Filter by player
-  player_rate = calc_data %>% filter(link == player_link) %>%  arrange(desc(game_date))
-  
-  # Add player i rate
-  last_player_rate = player_rate[1,]
-  
-  # Take the most recent rating
-  all_last_p_rates = rbind(all_last_p_rates, last_player_rate)
+  #player_rate = calc_data %>% filter(link == player_link) %>%  arrange(desc(game_date))
+  player_rate = calc_data %>% filter(link == player_link & min > 0) %>%  arrange(desc(game_date))
+ 
+  # If exists player
+  if (nrow(player_rate) > 0){
+    # Add player i rate
+    last_player_rate = player_rate[1,]
+    
+    # Take the most recent rating
+    all_last_p_rates = rbind(all_last_p_rates, last_player_rate)
+  }
 }
 
 ## Let only unique players
@@ -198,4 +212,6 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW18022023.RData")
+#saveRDS(calc_data, "data/calc_data03042023.RData")
+## SAVE ONLY MANUALLY
+#saveRDS(all_last_p_rates, "data/lastSW03042023.RData")
