@@ -1,0 +1,3 @@
+load("/Users/ignatkrukovskiy/Desktop/R Projects/elo/data/last_SW.RData")
+load("/Users/ignatkrukovskiy/Desktop/R Projects/elo/data/calc_data11022023.RData")
+load("/Users/ignatkrukovskiy/Desktop/R Projects/elo/data/calc_data03042023.RData")

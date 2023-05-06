@@ -1,0 +1,161 @@
+---
+title: ''
+date: ""
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(knitr)
+library('ggspectra')
+library("ggpmisc")
+library("lubridate")
+library(dplyr)
+library(ggplot2)
+library(tibble)
+library(PlayerRatings)
+library(tidyr)
+library(reactable)
+library(htmltools)
+```
+<br>
+<br>
+<br>
+<br>
+<br>
+
+###                     TOP-15 JUGADORES SUB23
+####                LIGA PROFESIONAL DE FÚTBOL
+```{r echo=FALSE}
+inp_data <- readRDS("data/lastSW01052023.RData")
+inp_profiles <- readRDS("data/PlayersProfiles_07052023.RDS")
+# filter by DATE and AGE !!!
+mdata = merge(inp_data, inp_profiles, by.x  = "link", by.y = "shortURL")
+mdata = mdata %>% filter(`Fecha de nacimiento` > "2000-05-07" & game_date > "2023-04-24" & Nacionalidad == "Argentina")
+
+htmltools::tags$link(
+  href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
+  rel = "stylesheet"
+)
+# Count age
+require(lubridate)
+age = trunc((mdata$`Fecha de nacimiento` %--% Sys.Date()) / years(1))
+
+# create special dataframe
+ctd = mdata[,c("player", "team", "Posición", "PlayerRateAfter")]
+ctd$age = age
+ctd$photo = ""
+ctd$value = ""
+ctd$PlayerRateAfter = round(ctd$PlayerRateAfter,1)
+ctd = ctd %>% relocate(photo, .before = player)
+ctd = ctd %>% relocate(age, .after = player)
+#ctd = ctd %>% relocate(PlayerRateAfter, .before = photo)
+ctd = ctd %>% arrange(desc(PlayerRateAfter))
+
+# Change positions
+ctd[ctd == "Portero"] <- "Arq"
+ctd[ctd == "Defensa"] <- "Def"
+ctd[ctd == "Centrocampista"] <- "Med"
+ctd[ctd == "Delantero"] <- "Del"
+
+#TOP 15 photo
+ctd[1:15,]$photo = c("hhezze","bjvarela", "rpsolari", "bjefernandez", "slgiay",
+                     "ajnuss", "bjsandez", "ujuarez", "ajcabral", "cgalvan",
+                     "bjvazquez", "ajminissale", "hgauto", "ajredondo", "tvillagra")
+  
+ctd[1:15,]$value = c("€5.5m","€10m","€6.5m","€5m","€4m","€0.65m","€1m","€0.6m","€1.5m","€0.4m","€4m","€0.125m","€1.5m","€0.4m","€5m")
+
+ctd = ctd %>% mutate(rank = row_number()) %>% relocate(rank, .before = photo) 
+#ctd = ctd %>% relocate(value, .before = PlayerRateAfter)
+#                                       +1 because of hours difference
+top_n = ctd[1:15,]
+```
+
+```{r table, echo=FALSE}
+## Drawing table
+
+BuYlRd <- function(x) rgb(colorRamp(c("#7fb7d7", "#ffffbf", "#fc8d59"))(x), maxColorValue = 255)
+sticky_style <- list(fontWeight = "regular")
+reactable(
+  top_n,
+  columns = list(
+     rank = colDef(name = "#",
+                    maxWidth = 65,
+                   align = "center"),
+     PlayerRateAfter = colDef(name = "Pers. Elo",
+                             maxWidth = 90,
+                             format = colFormat(digits = 1),
+                             align = "center",
+                             cell = function(value) {
+        color <- "#b6ff8c"
+        value <- format(round(value, 1), nsmall = 1)
+        div(class = "spi-rating", style = sticky_style, value)
+      }
+                            ),
+    photo = colDef(name = "",
+                   cell = function(value) { img_src <- knitr::image_uri(sprintf("players/top15y/%s.png", value))
+                   image <- img(src = img_src, style = "height: 57px", alt = value)
+                   tagList(
+                     div(style = "display: inline-block; width: 57px", image))
+                   },
+                   maxWidth = 64
+                   ),
+    player = colDef(name = "Jugador",
+                      maxWidth = 140,
+                   style = list(color = color, fontWeight = "bold")),
+    age = colDef(name = "Edad",
+                       maxWidth = 65,
+                  align = "center"),
+    Posición = colDef(name = "Posición",
+                       maxWidth = 65,
+                      align = "center"),
+    value = colDef(name = "Valor de mercado",
+                       maxWidth = 90, 
+                   align = "right",
+                  style = list(fontWeight = "bold"))
+      ),
+  defaultColDef = colDef(headerStyle = list(fontWeight=200), vAlign = "center"),
+  defaultSorted = "PlayerRateAfter",
+  defaultSortOrder = "desc",
+  borderless = TRUE,
+  height = 600,
+  defaultPageSize = 5,
+  style = list(fontFamily = "Karla, Helvetica Neue",fontSize = "1.75rem"),
+)
+```
+
+
+```{css styles, eval=FALSE, echo = FALSE}
+.spi-rating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  width: 1.875rem;
+  height: 1.875rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  color: #000;
+  font-size: 0.8125rem;
+  letter-spacing: -1px;
+}
+.title {
+  margin: 0.75rem 0.375rem 1.5rem;
+  padding: 0;
+  font-size: 0.5rem;
+  font-weight: 600;
+}
+
+.header {
+  border-bottom-color: #555;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+```
