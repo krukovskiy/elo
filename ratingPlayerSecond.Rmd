@@ -30,46 +30,41 @@ library(htmltools)
 <br>
 <br>
 
-### Personal Elo ranking: 18-04-2023
+### Personal Elo ranking: 26-04-2023
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW18042023.RData")
+inp_data <- readRDS("data/lastSW01052023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-04-14" & competition == "Liga Profesional Argentina" & min > 0)
+inp_data = inp_data %>% filter(game_date > "2023-04-26"  & min > 0)
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
 )
 # create special dataframe
-ctd = inp_data[,c("team", "player", "game_date" , "min","PlayerRateAfter","result")]
-ctd$diff = inp_data$PlayerRateAfter - inp_data$PlayerRateBefore
-ctd = ctd %>% relocate(diff, .after = result) 
+ctd = inp_data[,c("team", "player","PlayerRateAfter")]
 ctd$photo = ""
 ctd$PlayerRateAfter = round(ctd$PlayerRateAfter,1)
-ctd$diff = round(ctd$diff,1)
+ctd$Position = "Def"
 ctd = ctd %>% arrange(desc(PlayerRateAfter)) %>% mutate(rank = row_number()) %>% relocate(rank, .before = team) 
-ctd = ctd %>% relocate(photo, .after = team)
-ctd = ctd %>% relocate(PlayerRateAfter, .after = diff)
+ctd = ctd %>% relocate(photo, .after = team) %>% relocate(Position, .after = player)
 ctd = ctd %>% arrange(desc(PlayerRateAfter))
 
 
 # top_n
-# ctd[1:10,]$photo = c("bjadvincula","bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto" "hgsoto", "rparmani", "rpcasco", "rhauche",  "rmoreno", "rsigali", "rinsua","slhernandez", "slcerutti",  "slgattoni" "slbatalla" "slelias",                     "tluciatti", "tcastro" ,   "talfranco", "talsosa")
+# ctd[1:10,]$photo = c("bjadvincula","bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto", "dyjunsain", "dyjlopez", "hgsoto", "pmacagno","rparmani", "rpcasco", "rpdiaz", "rpperez""rhauche",  "rmoreno", "rsigali", "rinsua","slhernandez", "slcerutti",  "slgattoni" "slbatalla" "slelias",                     "tluciatti", "tcastro" ,   "talfranco", "talsosa")
 #TOP 15
-ctd[1:15,]$photo = c("slhernandez","rparmani","dyjasoto", "rpbarco", "slgattoni",
-                     "ccrius","slbatalla","pmacagno","slelias","rhauche",
-                    "rsigali","rmura", "slgiay", "vggomez",   "tluciatti")
-
+ctd[1:15,]$photo = c("rpcasco","dyjasoto","rparmani","rpbarco","rmoreno",
+                     "slhernandez", "ccrius","slgattoni","dyjunsain", "dyjlopez",
+                     "rinsua","rhauche", "bjvilla", "talsosa", "slbatalla")
+ctd[1:15,]$Position = c("Def", "Def", "Arq", "Med", "Med",
+                        "Def", "Med", "Def", "Arq", "Med",
+                        "Def", "Med", "Del", "Med", "Arq")
 
 #                                       +1 because of hours difference
-ctd$game_date = as.Date(ctd$game_date) +1
-ctd$game_date = format(as.Date(ctd$game_date), "%d-%m")
-qr = c( min(ctd$diff) + (((max(ctd$diff) - min(ctd$diff)) / 3)),min(ctd$diff) + (((max(ctd$diff) - min(ctd$diff)) / 3))*2)
-
 # add valor de mercado
 ctd$value = ""
-ctd[1:15,]$value = c("€3.2m","€3m","€1.5m","€6m","€4.5",
-                     "€0.2m","€2m","€0.85m","€2.5m","€0.35m",
-                     "€1.2m","€3.5m","€4m","€1.5m","€0.45m")
+ctd[1:15,]$value = c("€1.2m","€1.5m","€3m","€6m","€8m",
+                     "€3.2m","€0.2m","€4.5m","€4m","€0.5m",
+                     "€0.75m","€0.35m","€5m","€4m","€2m")
 
 top_n = ctd[1:15,]
 
@@ -119,51 +114,22 @@ reactable(
     player = colDef(name = "Jugador",
                       maxWidth = 100,
                    style = list(color = color, fontWeight = "bold")),
-    game_date = colDef(name = "Último partido",
-                       maxWidth = 65),
-    min = colDef(name = "Min.",
-                 format = colFormat(digits = 0),
-                 maxWidth = 50),
-    result = colDef(name = "Resultado",
-      cell = function(value) {
-        img_src <- knitr::image_uri(sprintf("result/%s.png", value))
-        image <- img(src = img_src, style = "height: 20px;", alt = value)
-        tagList(
-          div(style = "display: inline-block; width: 20px", image)
-          )
-      },
-      align = "center",
-      maxWidth = 50
-    ),
-    PlayerRateAfter = colDef(name = "Elo total",
+        PlayerRateAfter = colDef(name = "Elo total",
                              maxWidth = 64,
                              format = colFormat(digits = 1),
                              align = "left",
                             style = list(fontWeight = "bold")
                             ),
-                             
-    diff = rating_column(
-      name = "Elo +/-",
-      cell = function(value) {
-        if (value >= 0) paste0("+", value) else value
-        scaled <- (value - min(ctd$diff)) / (max(ctd$diff) - min(ctd$diff))
-        color <- off_rating_color(scaled)
-        value <- format(round(value, 1), nsmall = 1)
-        div(class = "spi-rating", style = list(background = color, fontWeight = "bold"), value)
-      }
-    ),
-    doge = colDef(name = "Doge rank",
-      cell = function(value) {
-        img_src <- knitr::image_uri(sprintf("doge/%s.png", value))
-        image <- img(src = img_src, style = "height: 48px;", alt = value)
-        tagList(
-          div(style = "display: inline-block; width: 48px", image)
-          )
-      },
-      align = "center",
-      maxWidth = 64
-    ),
-    value = colDef(name = "Valor de mercado",
+      Position = colDef(name = "Posición",
+                       maxWidth = 75,
+                      align = "center"),
+        PlayerRateAfter = colDef(name = "Elo total",
+                             maxWidth = 64,
+                             format = colFormat(digits = 1),
+                             align = "left",
+                            style = list(fontWeight = "bold")
+                            ),
+  value = colDef(name = "Valor de mercado",
                        maxWidth = 74, 
                    align = "center",
                   style = list(fontWeight = "bold"))

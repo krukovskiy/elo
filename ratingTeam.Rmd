@@ -27,9 +27,9 @@ library(htmltools)
 
 ### P
 ```{r echo=FALSE}
-t_data <- readRDS("data/lastSW03042023.RData")
+t_data <- readRDS("data/lastSW01052023.RData")
 # create special dataframe
-t_data = t_data %>% filter(game_date > "2023-03-28" & competition == "Liga Profesional Argentina" & min > 0)
+t_data = t_data %>% filter(game_date > "2023-04-26" & competition == "Liga Profesional Argentina" & min > 0)
 #t_data = t_data %>% filter(game_date > "2023-02-23" & min > 0)
 t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
 t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])
