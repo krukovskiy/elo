@@ -25,11 +25,11 @@ library(reactable)
 library(htmltools)
 ```
 
-### P
+### 
 ```{r echo=FALSE}
-t_data <- readRDS("data/lastSW01052023.RData")
+t_data <- readRDS("data/lastSW14062023.RData")
 # create special dataframe
-t_data = t_data %>% filter(game_date > "2023-04-26" & competition == "Liga Profesional Argentina" & min > 0)
+t_data = t_data %>% filter(game_date > "2023-06-05" & competition == "Liga Profesional Argentina" & min > 0)
 #t_data = t_data %>% filter(game_date > "2023-02-23" & min > 0)
 t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
 t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])
@@ -66,7 +66,8 @@ BuYlRd <- function(x) rgb(colorRamp(c("#7fb7d7", "#ffffbf", "#fc8d59"))(x), maxC
 reactable(
   t_data2,
   columns = list(
-    rank = colDef(name = "#"),
+    rank = colDef(name = "#",
+                  maxWidth = 65),
     logo = colDef(name = "",
       cell = function(value) {
         img_src <- knitr::image_uri(sprintf("logo/%s", value))

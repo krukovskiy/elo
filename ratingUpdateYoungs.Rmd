@@ -33,11 +33,11 @@ library(htmltools)
 ###                     TOP-15 JUGADORES SUB23
 ####                LIGA PROFESIONAL DE FÚTBOL
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW01052023.RData")
+inp_data <- readRDS("data/lastSW23052023.RData")
 inp_profiles <- readRDS("data/PlayersProfiles_07052023.RDS")
 # filter by DATE and AGE !!!
 mdata = merge(inp_data, inp_profiles, by.x  = "link", by.y = "shortURL")
-mdata = mdata %>% filter(`Fecha de nacimiento` > "2000-05-07" & game_date > "2023-04-24" & Nacionalidad == "Argentina")
+mdata = mdata %>% filter(`Fecha de nacimiento` > "2000-05-22" & game_date > "2023-05-16" & Nacionalidad == "Argentina")
 
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",

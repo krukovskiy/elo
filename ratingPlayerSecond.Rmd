@@ -30,11 +30,11 @@ library(htmltools)
 <br>
 <br>
 
-### Personal Elo ranking: 26-04-2023
+###
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW01052023.RData")
+inp_data <- readRDS("data/lastSW14062023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-04-26"  & min > 0)
+inp_data = inp_data %>% filter(game_date > "2023-06-05"  & min > 0)
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
@@ -50,21 +50,21 @@ ctd = ctd %>% arrange(desc(PlayerRateAfter))
 
 
 # top_n
-# ctd[1:10,]$photo = c("bjadvincula","bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto", "dyjunsain", "dyjlopez", "hgsoto", "pmacagno","rparmani", "rpcasco", "rpdiaz", "rpperez""rhauche",  "rmoreno", "rsigali", "rinsua","slhernandez", "slcerutti",  "slgattoni" "slbatalla" "slelias",                     "tluciatti", "tcastro" ,   "talfranco", "talsosa")
+# ctd[1:10,]$photo = c("bjadvincula","bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto", "dyjunsain", "dyjlopez", "ejrodriguez", "eandujar","ezuqui", "hgsoto", "nobsforza","pmacagno","rparmani", "rpcasco", "rppdiaz", "rpperez""rhauche",  "rmoreno", "rsigali", "rinsua","slhernandez", "slcerutti",  "slgattoni" "slbatalla" "slelias", "talvillagra", "tluciatti", "tcastro" ,   "talfranco", "talsosa")
 #TOP 15
-ctd[1:15,]$photo = c("rpcasco","dyjasoto","rparmani","rpbarco","rmoreno",
-                     "slhernandez", "ccrius","slgattoni","dyjunsain", "dyjlopez",
-                     "rinsua","rhauche", "bjvilla", "talsosa", "slbatalla")
-ctd[1:15,]$Position = c("Def", "Def", "Arq", "Med", "Med",
-                        "Def", "Med", "Def", "Arq", "Med",
-                        "Def", "Med", "Del", "Med", "Arq")
+ctd[1:15,]$photo = c("dyjasoto", "rpcasco","rparmani","ccrius", "talsosa", 
+                      "slhernandez","rpbarco", "rmoreno","slcerutti","dyjunsain",
+                      "bjfigal", "rppdiaz", "dyjlopez", "talvillagra", "nobsforza")
+ctd[1:15,]$Position = c("Med", "Med", "Med", "Med", "Med",
+                        "Arq", "Med", "Def", "Def", "Med",
+                        "Def", "Def", "Med", "Def", "Med")
 
 #                                       +1 because of hours difference
 # add valor de mercado
 ctd$value = ""
-ctd[1:15,]$value = c("€1.2m","€1.5m","€3m","€6m","€8m",
-                     "€3.2m","€0.2m","€4.5m","€4m","€0.5m",
-                     "€0.75m","€0.35m","€5m","€4m","€2m")
+ctd[1:15,]$value = c("€1.5m","€1.2m","€3m","€0.2m","€4m",
+                     "€3.2m","€6m","€8m","€0.8m","€4m",
+                     "€4m","€4.5m","€0.5m","€6.5m","€3.5m")
 
 top_n = ctd[1:15,]
 
@@ -91,7 +91,8 @@ BuYlRd <- function(x) rgb(colorRamp(c("#7fb7d7", "#ffffbf", "#fc8d59"))(x), maxC
 reactable(
   top_n,
   columns = list(
-    rank = colDef(name = "#"),
+    rank = colDef(name = "#",
+                  maxWidth = 65),
     team = colDef(name = "Equipo",
       cell = function(value) {
         img_src <- knitr::image_uri(sprintf("logo/%s.png", value))

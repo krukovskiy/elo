@@ -58,6 +58,11 @@ pprofile = cbind(pprofile, shortURL)
 pprofile[2,]
 }
 
+# Get players that arent in the list
+beforeProfiles <- readRDS("data/PlayersProfiles_15042023.RDS")
+all_last_p_rates <- readRDS("data/lastSW01052023.RData")
+newPlayers=subset(all_last_p_rates, !(link %in% beforeProfiles$shortURL))
+URL2=newPlayers$link
 
 ## Mass scrapping
 # Call these variables cause we use them furthermore
@@ -73,8 +78,8 @@ while(i <= length(URL2)) {
 big_pl_data = do.call(rbind,  pl_frames)
 
 ## Merge with
-pprofiles <- readRDS("data/PlayersProfiles_19032023.RDS")
+pprofiles <- readRDS("data/PlayersProfiles_15042023.RDS")
 
 big_pl_data = rbind(pprofiles,big_pl_data)
 
-#saveRDS(big_pl_data, "data/PlayersProfiles_15042023.RDS")
+#saveRDS(big_pl_data, "data/PlayersProfiles_07052023.RDS")

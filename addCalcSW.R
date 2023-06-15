@@ -15,11 +15,11 @@ library(PlayerRatings)
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data18042023.RData")
+calc_data <- readRDS("data/calc_data05062023.RData")
 # calc_data$rc = NA
 # calc_data = calc_data %>% relocate(rc, .after = min) 
 #URL = "https://int.soccerway.com/matches/2023/02/12/argentina/primera-division/club-atletico-rosario-central/arsenal-de-sarandi/3982576/"
-URL = read.csv2("data/links26042023.csv", header = FALSE)$V1
+URL = read.csv2("data/links14062023.csv", header = FALSE)$V1
 
 # Add game logs to the one big frame
 i <- 1
@@ -212,6 +212,6 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(calc_data, "data/calc_data26042023.RData")
+#saveRDS(calc_data, "data/calc_data14062023.RData")
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW26042023.RData")
+#saveRDS(all_last_p_rates, "data/lastSW14062023.RData")
