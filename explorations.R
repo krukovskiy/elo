@@ -238,3 +238,23 @@ ggplot(data=p_data, aes(logPer$residuals)) +
         axis.line.x=element_line(),
         axis.line.y=element_line()) +
   ggtitle("Histogram for Model Residuals")
+
+
+
+library(dplyr)
+
+# Создаем новый датафрейм с пустыми строками
+out_data_new <- out_data %>%
+  mutate(
+    logo_home = ifelse(row_number() %% 2 == 0, NA, logo_home),
+    elo_home = ifelse(row_number() %% 2 == 0, NA, elo_home),
+    dif_home = ifelse(row_number() %% 2 == 0, NA, dif_home),
+    team_home = ifelse(row_number() %% 2 == 0, NA, team_home),
+    points_home = ifelse(row_number() %% 2 == 0, NA, points_home),
+    tire = ifelse(row_number() %% 2 == 0, NA, tire),
+    points_away = ifelse(row_number() %% 2 == 0, NA, points_away),
+    team_away = ifelse(row_number() %% 2 == 0, NA, team_away),
+    elo_away = ifelse(row_number() %% 2 == 0, NA, elo_away),
+    dif_away = ifelse(row_number() %% 2 == 0, NA, dif_away),
+    logo_away = ifelse(row_number() %% 2 == 0, NA, logo_away)
+  )

@@ -14,7 +14,7 @@ library(ggimage)
 library(data.table)
 
 # Load rating data
-rating_data = readRDS("arg_season_2022_23_rating")
+rating_data = readRDS("data/calc_data12072023.RData")
 
 # Add necessary fonts
 font_add_google("Open Sans", family = "special")
@@ -66,14 +66,14 @@ ggplot() +
 
 
 # Filter by date
-last_data = rating_data %>% filter(game_date >= "2022-10-23")
+last_data = rating_data %>% filter(game_date >= "2023-01-01")
 
 # Make team as factor
 last_data$team = as.factor(last_data$team)
 
 #### COUNT PLAYER INDIVIDUAL GRAPH
-player_name = "Luca Orellano"
-player_rate = rating_data %>% filter(player == player_name) %>%  arrange(desc(game_date))
+player_name = "M. Casco"
+player_rate = rating_data %>% filter(player == player_name & game_date >= "2022-01-01") %>%  arrange(desc(game_date))
 
 ### Draw with boca juniors colors
 
@@ -87,9 +87,9 @@ myPlot = ggplot(data = player_rate, aes(x = game_date)) +
                   show.legend = F) +
   scale_color_manual(name='Player/Team',
                      breaks=c(player_name, 'Boca Juniors'),
-                     values=c('Aníbal Moreno'= "#fbd455", 'Boca Juniors'='#133b5b')) +
+                     values=c('M. Casco'= "#fbd455", 'Boca Juniors'='#133b5b')) +
   scale_fill_manual(values = c("#fbd455", "#133b5b")) +
-  ylim(c(1470,1720)) +
+  ylim(c(1470,1890)) +
   labs(title = "Personal rating over team rating after regular season 2022, 
 Liga Profesional de Fútbol",
        x = "Date",
@@ -108,9 +108,9 @@ myPlot2 = ggplot(data = player_rate, aes(x = game_date)) +
                   show.legend = F) +
   scale_color_manual(name='Player/Team',
                      breaks=c(player_name, 'River Plate'),
-                     values=c('Julián Álvarez'= "#eb192e", 'River Plate'='#000000')) +
+                     values=c('M. Casco'= "#eb192e", 'River Plate'='#000000')) +
   scale_fill_manual(values = c("#eb192e", "#000000")) +
-  ylim(c(1470,1720)) +
+  ylim(c(1470,1890)) +
   labs(title = "Personal rating over team rating after regular season 2022, 
 Liga Profesional de Fútbol",
        x = "Date",
@@ -153,9 +153,9 @@ tr = distinct(team_date, game_date, .keep_all = T)
 ## Plot Racing Top3 Players
 
 # Count team
-team_name = "CA Huracán"
+team_name = "River Plate"
 rtop = all_last_p_rates %>% filter(team == team_name) %>% arrange(player)
-barplot(rtop$PlayerRateAfter, names.arg=rtop$player, ylim = c(1420, 1670), xpd = F, 
+barplot(rtop$PlayerRateAfter, names.arg=rtop$player, ylim = c(1420, 1880), xpd = F, 
         las = 2)
 rtop$player = as.factor(rtop$player) # Make factor to arrange players
 
@@ -164,19 +164,19 @@ last_team_average = rating_data %>% filter(team == team_name & game_date > "2022
 last_team_average = last_team_average$TeamRateAfter[1]
 
 # Paths to logo files
-path_boca = "logo/boca.png"
+path_boca = "logo/Boca Juniors.png"
 img_boca <- readPNG(path_boca, native = TRUE)
-path_racing = "logo/racing-logo-escudo.png"
+path_racing = "logo/circles/Racing Club.png"
 img_racing <- readPNG(path_racing, native = TRUE)
-path_slorenzo = "logo/san_lorenzo.png"
+path_slorenzo = "logo/circles/San Lorenzo.png"
 img_slorenzo <- readPNG(path_slorenzo, native = T)
 path_lpfa = "logo/lpfa2.png"
 img_lpfa <- readPNG(path_lpfa, native = T)
-path_tigre = "logo/tigre.png"
+path_tigre = "logo/Tigre.png"
 img_tigre <- readPNG(path_tigre)
-path_river = "logo/river.png"
+path_river = "logo/River Plate.png"
 img_river <- readPNG(path_river, native = T)
-path_huracan = "logo/huracan.png"
+path_huracan = "logo/Huracán.png"
 img_huracan <- readPNG(path_huracan, native = T)
 
 # Draw Racing Club
@@ -210,7 +210,7 @@ ggplot(rtop)+
   
 ## !!!!!!!!!!!!!! Boxplot animation  (for Flourish too start here)  !!!!!!!!!!!!!!!!!!!!!!
 # select team
-current_team = "CA Huracán"
+current_team = "River Plate"
 players_rates = rating_data %>% filter(team == current_team) %>% arrange(desc(game_date)) 
 #players_rates$game_date = as.factor(players_rates$game_date)
 
@@ -231,7 +231,7 @@ for (i in 1:length(game_cur_dates)) {
  
   players_rates2 = rbind.fill(players_rates2, tt2) ## agregamos chicos que no estaban alla
   players_rates2 = players_rates2 %>% group_by(player) %>% arrange(game_date) %>% fill(PlayerRateAfter) 
-  players_rates2 = players_rates2 %>% fill(c("team", "result", "rival", 'TeamRateBefore', "TeamRateAfter", "RivalRateBefore", "country"))
+  players_rates2 = players_rates2 %>% fill(c("team", "result", "rival", 'TeamRateBefore', "TeamRateAfter", "RivalRateBefore"))
   
 }
 
@@ -255,7 +255,8 @@ pre = data.frame(player = players_cur_unique, team = current_team)
 # Make Player Rates for Export Flourish
 for (i in 1:length(game_cur_dates)) {
   players_rates_cur = players_rates2 %>% drop_na(PlayerRateAfter) %>% filter(game_date == game_cur_dates[i])
-  pre = left_join(pre, players_rates_cur[, c("player", "PlayerRateAfter")], by = "player", all = TRUE)
+  #pre = left_join(pre, players_rates_cur[, c("player", "PlayerRateAfter")], by = "player", all = TRUE)
+  pre = left_join(pre, players_rates_cur[, c("player", "PlayerRateAfter")], by = "player")
   pre[is.na(pre)] = ""
   names(pre)[names(pre) == 'PlayerRateAfter'] <- as.character(game_cur_dates[i])
   
@@ -283,7 +284,7 @@ players_rates_ranked[,"PlayerRateAfterDec"] = players_rates_ranked[,"PlayerRateA
 #players_rates_ranked = players_rates_ranked %>% filter(rank <= 10 )
 
 # Barplot df = players_rates_ranked
-im <- readPNG("logo/racing-logo-escudo.png")
+im <- readPNG("logo/circles/Racing Club.png")
 im2 <- matrix(rgb(im[,,1],im[,,2],im[,,3], im[,,4] * 0.3), nrow=dim(im)[1]) ## you can change 0.5 to change the alpa
 
 

@@ -29,8 +29,12 @@ teams = page %>% read_html() %>% html_nodes(".team-title")  %>% html_text2()
 team = teams[1]
 rival = teams[2]
 
+#skip if ther is no players
+
 # Find home players
 rank_home = page %>% read_html() %>% html_nodes(".left .large-link") 
+if (length(rank_home) != 0 )
+{
 t_home = data.frame(link = rank_home %>% html_node("a") %>% html_attr("href"),
                name = rank_home %>% html_text2(),
                min = NA
@@ -182,7 +186,8 @@ game_frame = data.frame(game_date,
                    rival = rival, 
                    score_h = game_result_raw[1] ,
                    score_a = game_result_raw[2], 
-                   result)
+                   result,
+                   is_home = 1) # is_home - if the team plays at home
 
 
 #### Now we make the same with the second team, but RIVAL will be change
@@ -195,7 +200,8 @@ game_frame2 = data.frame(game_date,
                         rival = team, 
                         score_h = game_result_raw[1] ,
                         score_a = game_result_raw[2], 
-                        result = result_a)
+                        result = result_a,
+                        is_home = 0)
 
 ### AND NOW (!!!) aggregate all data to one dataframe
 game_frame = rbind(game_frame, game_frame2)
@@ -204,4 +210,5 @@ game_frame = rbind(game_frame, game_frame2)
 game_frame = cbind(game_frame, competition = competition_name)
 
 game_frame
+}
 }

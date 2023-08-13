@@ -15,11 +15,15 @@ library(PlayerRatings)
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data05062023.RData")
+calc_data <- readRDS("data/calc_data06082023.RData")
 # calc_data$rc = NA
 # calc_data = calc_data %>% relocate(rc, .after = min) 
 #URL = "https://int.soccerway.com/matches/2023/02/12/argentina/primera-division/club-atletico-rosario-central/arsenal-de-sarandi/3982576/"
-URL = read.csv2("data/links14062023.csv", header = FALSE)$V1
+
+# without column name
+#URL = read.csv2("data/links20230805.csv", header = FALSE)$V1
+# with column name
+URL = read.csv2("data/links20230812.csv", header = FALSE)$V2[-1]
 
 # Add game logs to the one big frame
 i <- 1
@@ -193,7 +197,6 @@ for (i in 1:nrow(players_unique))
   player_link = players_unique$link[i]
   
   # Filter by player
-  #player_rate = calc_data %>% filter(link == player_link) %>%  arrange(desc(game_date))
   player_rate = calc_data %>% filter(link == player_link & min > 0) %>%  arrange(desc(game_date))
  
   # If exists player
@@ -212,6 +215,6 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(calc_data, "data/calc_data14062023.RData")
+#saveRDS(calc_data, "data/calc_data12082023.RData")
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW14062023.RData")
+#saveRDS(all_last_p_rates, "data/lastSW12082023.RData")

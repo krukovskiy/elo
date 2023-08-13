@@ -27,9 +27,13 @@ library(htmltools)
 
 ### 
 ```{r echo=FALSE}
-t_data <- readRDS("data/lastSW14062023.RData")
+t_data <- readRDS("data/lastSW26072023.RData")
 # create special dataframe
-t_data = t_data %>% filter(game_date > "2023-06-05" & competition == "Liga Profesional Argentina" & min > 0)
+t_data = t_data %>% filter(game_date > "2023-07-18" & competition == "Liga Profesional Argentina" & min > 0)
+
+# Фильтруем дубли
+t_data = t_data[t_data$game_date != "2023-07-08" | (t_data$team != "Gimnasia La Plata" & t_data$team != "Independiente" & t_data$team != "Newell's Old Boys"), ]  
+
 #t_data = t_data %>% filter(game_date > "2023-02-23" & min > 0)
 t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
 t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])

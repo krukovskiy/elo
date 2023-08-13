@@ -36,7 +36,7 @@ colnames(pprofile) <- c("Nombre", "Apellidos", "Nacionalidad", "Fecha de nacimie
 # Parse html page
 # cn = Column names
 cn = page %>% read_html() %>% html_nodes("dt") %>% html_text2()  
-# cv = Column values
+cn# cv = Column values
 cv = page %>% read_html() %>% html_nodes("dd") %>% html_text2()  
 
 # curprofile = Current profile
@@ -44,23 +44,27 @@ curprofile <- as.data.frame(rbind(cv))
 colnames(curprofile) <- cn
  
 # Merge
-pprofile = full_join(pprofile, curprofile)
+if (length(cn) > 0)
+{
+  pprofile = full_join(pprofile, curprofile)
+  
+  # Convert date of birthday
+  clock_labels_lookup("es")
+  pprofile$`Fecha de nacimiento` = date_parse(
+    x = pprofile$`Fecha de nacimiento`,
+    format = "%d %B %Y",
+    locale = clock_locale(labels = "es")
+  )
+  
+  pprofile = cbind(pprofile, shortURL)
+  pprofile[2,]
+}
 
-# Convert date of birthday
-clock_labels_lookup("es")
-pprofile$`Fecha de nacimiento` = date_parse(
-  x = pprofile$`Fecha de nacimiento`,
-  format = "%d %B %Y",
-  locale = clock_locale(labels = "es")
-)
-
-pprofile = cbind(pprofile, shortURL)
-pprofile[2,]
 }
 
 # Get players that arent in the list
-beforeProfiles <- readRDS("data/PlayersProfiles_15042023.RDS")
-all_last_p_rates <- readRDS("data/lastSW01052023.RData")
+beforeProfiles <- readRDS("data/PlayersProfiles_06082023.RDS")
+all_last_p_rates <- readRDS("data/lastSW06082023.RData")
 newPlayers=subset(all_last_p_rates, !(link %in% beforeProfiles$shortURL))
 URL2=newPlayers$link
 
@@ -78,8 +82,8 @@ while(i <= length(URL2)) {
 big_pl_data = do.call(rbind,  pl_frames)
 
 ## Merge with
-pprofiles <- readRDS("data/PlayersProfiles_15042023.RDS")
+pprofiles <- readRDS("data/PlayersProfiles_07052023.RDS")
 
 big_pl_data = rbind(pprofiles,big_pl_data)
 
-#saveRDS(big_pl_data, "data/PlayersProfiles_07052023.RDS")
+#saveRDS(big_pl_data, "data/PlayersProfiles_06082023.RDS")
