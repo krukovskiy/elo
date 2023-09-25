@@ -32,9 +32,9 @@ library(htmltools)
 
 ###
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW12082023.RData")
+inp_data <- readRDS("data/lastSW26082023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-08-03"  & min > 0)
+inp_data = inp_data %>% filter(game_date > "2023-08-24"  & min > 0 & competition == "Liga Profesional Argentina")
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"

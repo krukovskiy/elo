@@ -20,16 +20,18 @@ library(reactable)
 library(htmltools)
 ```
 
-## LIGA PROFESIONAL DE FÚTBOL
+## LIGA PROFESIONAL DE FÚTBOL - FECHA 27
 
 ```{r echo=FALSE}
 ###                     SCOREBOARD
 ####                LIGA PROFESIONAL DE FÚTBOL
-inp_data <- readRDS("data/lastSW26072023.RData")
-inp_data = inp_data %>% filter(game_date > "2023-07-18" & competition == "Liga Profesional Argentina" & min > 0 & is_home == 1) %>% arrange(game_date)
+inp_data <- readRDS("data/123.RData")
+
+inp_data = inp_data %>% filter(game_date > "2023-07-25" & competition == "Liga Profesional Argentina" & min > 0 & is_home == 1) %>% arrange(game_date)
+#inp_data = inp_data %>% filter(game_date > "2023-08-24" & min > 0 & is_home == 1) %>% arrange(game_date)
 
 # Фильтруем дубли
-inp_data = inp_data[inp_data$game_date != "2023-07-08" | inp_data$team != "Gimnasia La Plata", ]   
+inp_data = inp_data[inp_data$game_date != "2023-07-24" | inp_data$team != "Gimnasia La Plata", ]   
 
 # Count diff
 inp_data$diff = inp_data$TeamRateAfter - inp_data$TeamRateBefore

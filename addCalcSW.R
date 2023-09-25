@@ -15,7 +15,8 @@ library(PlayerRatings)
 
 # 1. First get links
 # We initialize calc_data with history data because in this file we make add calculations
-calc_data <- readRDS("data/calc_data06082023.RData")
+calc_data <- readRDS("data/calc_data31082023.RData")
+all_last_p_rates <- readRDS("data/lastSW23092023.RData")
 # calc_data$rc = NA
 # calc_data = calc_data %>% relocate(rc, .after = min) 
 #URL = "https://int.soccerway.com/matches/2023/02/12/argentina/primera-division/club-atletico-rosario-central/arsenal-de-sarandi/3982576/"
@@ -23,7 +24,16 @@ calc_data <- readRDS("data/calc_data06082023.RData")
 # without column name
 #URL = read.csv2("data/links20230805.csv", header = FALSE)$V1
 # with column name
-URL = read.csv2("data/links20230812.csv", header = FALSE)$V2[-1]
+#URL = read.csv2("data/links20230829.csv", header = FALSE)$V2[-1]
+dates = c("2023/09/23")
+URLs <- c()
+i <- 1
+
+for (k in dates) {
+  URLs[[i]] = getLinksByDate(k)
+  i=i+1
+}
+URL<-unlist(URLs)
 
 # Add game logs to the one big frame
 i <- 1
@@ -44,12 +54,14 @@ big_data = big_data %>% arrange(game_date)
 games = big_data
 
 ## Define all game pairs (team * date)
-game_pairs = unique(games[c("game_date", "team")])
+game_pairs = unique(games[c("game_date", "team", "competition")])
 
-for (k in 1:nrow(game_pairs))
-{
+# frame for current players
+current_calc <- c()
+
+for (k in 1:nrow(game_pairs)){
   ## Select current game frame                           [k,1]
-  current_game = games %>% filter(game_date == game_pairs[k,1] & team == game_pairs[k,2])
+  current_game = games %>% filter(game_date == game_pairs[k,1] & team == game_pairs[k,2] & competition == game_pairs[k,3])
   current_game$team = as.character(current_game$team)
   game_min = as.numeric(max(current_game$min))
   ## Select game date
@@ -179,26 +191,46 @@ for (k in 1:nrow(game_pairs))
   # Team Rate After
   #current_game$TeamRateAfter = sum(current_game$PlayerRateAfter * (current_game$min/game_min))/ sum(current_game$min/game_min)
   
-  calc_data = rbind(calc_data, current_game)
- 
+  # frame of current calculations
+  current_calc = rbind(current_calc, current_game)
+  
 }
+# frame of all calculations
+calc_data = rbind(calc_data, current_calc)
+calc_data = calc_data[!duplicated(calc_data), ]
+calc_data$is_home = as.numeric(calc_data$is_home)
+calc_data = na.omit(calc_data)
 
+current_calc = current_calc[!duplicated(current_calc), ]
+current_calc$is_home = as.numeric(current_calc$is_home)
+current_calc = na.omit(current_calc)
+
+#calc_data = calc_data %>% anti_join(current_calc, by = c("game_date", "team", "competition"))  %>% bind_rows(current_calc)
 # Filter duplicated
-# Filter by team
-players_unique = unique(calc_data[c("player", "team", "link")])
+# Filter by team 1) or 2)
+#1)
+#players_unique = unique(calc_data[c("player", "team", "link")])
+#2)
+#  Leave only last result of a player
+current_calc = current_calc %>% 
+  mutate(game_date=as.Date(game_date, format= "%y-%m-%d"))%>% 
+  group_by(link) %>%  
+  arrange(desc(game_date)) %>%
+  slice(1)
 
-# Init data frame
-all_last_p_rates = calc_data[0,]
+all_last_p_rates <- all_last_p_rates %>% anti_join(current_calc, by = "link") %>% bind_rows(current_calc)
 
-# Make a loop      nrow(players_unique)
-for (i in 1:nrow(players_unique))
-{
-  # Find player last rating
+# Делаем либо 1), либо 2)
+# 1) Init data frame
+# all_last_p_rates = calc_data[0,]
+# 1) Make a loop      nrow(players_unique)
+ #for (i in 1:nrow(players_unique)){
+# Find player last rating
   player_link = players_unique$link[i]
   
   # Filter by player
-  player_rate = calc_data %>% filter(link == player_link & min > 0) %>%  arrange(desc(game_date))
- 
+  player_rate = current_calc %>% filter(link == player_link & min > 0) %>%  arrange(desc(game_date))
+  
   # If exists player
   if (nrow(player_rate) > 0){
     # Add player i rate
@@ -208,13 +240,16 @@ for (i in 1:nrow(players_unique))
     all_last_p_rates = rbind(all_last_p_rates, last_player_rate)
   }
 }
+# 2) all_last_p_rates$is_home <- as.numeric(all_last_p_rates$is_home )
+# Join player that changed
+#all_last_p_rates <- all_last_p_rates %>% anti_join(cur_last_rate, by = "link") %>% bind_rows(cur_last_rate)
 
 ## Let only unique players
 all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
-
+all_last_p_rates$is_home = as.numeric(all_last_p_rates$is_home)
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
 ## SAVE ONLY MANUALLY
-#saveRDS(calc_data, "data/calc_data12082023.RData")
+#saveRDS(calc_data, "data/calc_data23092023.RData")
 ## SAVE ONLY MANUALLY
-#saveRDS(all_last_p_rates, "data/lastSW12082023.RData")
+#saveRDS(all_last_p_rates, "data/lastSW23092023.RData")

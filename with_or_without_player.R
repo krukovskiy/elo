@@ -1,15 +1,15 @@
 library(dplyr)
 library(tidyverse)
 
-calc_data <- readRDS("data/calc_data06082023.RData")
+calc_data <- readRDS("data/calc_data16082023.RData")
 
 # Select team
-team = "Atlético Tucumán"
+team = "Boca Juniors"
 seleccion = "Argentina U20"
 
 # Select a player or link
-player = "N. Romero"
-link = "/players/nicolas-romero/689755/"
+player = "V. Barco"
+link = "/players/valentin-barco/725891/"
 # Select all games of the team
 games = calc_data %>% filter(game_date > "2023-01-01" &  team == !!team | team == !!seleccion)
 games = games %>% distinct(game_date, team, .keep_all=TRUE)
