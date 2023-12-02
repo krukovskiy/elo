@@ -3,13 +3,13 @@ library(stringr)
 
 
 # First read actual ratings
-all_last_p_rates = readRDS("data/lastSW05062023.RData.RData")
+all_last_p_rates = readRDS("data/123.RData")
 
 # Read player profiles
-playerProfile = readRDS("data/PlayersProfiles_07052023.RDS")
+playerProfile = readRDS("data/PlayersProfiles_02122023.RDS")
 
 # Filter by actual date
-filteredRatings = all_last_p_rates %>% filter(game_date > "2023-05-31"  & min > 0)
+filteredRatings = all_last_p_rates %>% filter(game_date > "2023-09-01" &  competition == "Premier League"  & min > 0)
 
 # Merge data frames
 mergedData = merge(filteredRatings, playerProfile, by.x  = "link", by.y = "shortURL") 
@@ -35,7 +35,7 @@ write.csv(flourishData, "plots/allBubbles_flourish_players.csv")
 
 
 ## Now make teams
-t_data = all_last_p_rates %>% filter(game_date > "2023-05-31" & competition == "Liga Profesional Argentina" & min > 0)
+t_data = all_last_p_rates %>% filter(game_date > "2023-07-25" & competition == "Liga Profesional Argentina" & min > 0)
 t_data$diff = t_data$TeamRateAfter - t_data$TeamRateBefore
 t_data2 = unique(t_data[c("team", "TeamRateAfter","diff", "result")])
 t_data2 = t_data2 %>% arrange(desc(TeamRateAfter)) %>% mutate(rank = row_number()) %>% relocate(rank, .before = team)

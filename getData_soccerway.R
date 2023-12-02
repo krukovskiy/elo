@@ -23,6 +23,12 @@ getGameFrameSW <- function(URL, competition_name)
 # Read the page. Use GET from httr package
 page <- GET(URL, add_headers('user-agent' = 'Web scrap for personal project ([[krukovskiy.ignat@gmail.com]])'))
 
+#while(http_status(page)$category != "Success"){
+  #Sys.sleep(300)
+#}
+
+if (http_status(page)$category == "Success")
+{
 
 # Parse html page
 # Find home and away teams
@@ -211,5 +217,6 @@ game_frame = rbind(game_frame, game_frame2)
 game_frame = cbind(game_frame, competition = competition_name)
 
 game_frame
+}
 }
 }

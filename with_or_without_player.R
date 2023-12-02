@@ -9,7 +9,7 @@ seleccion = "Argentina U20"
 
 # Select a player or link
 player = "V. Barco"
-link = "/players/valentin-barco/725891/"
+link = "/players/nicolas-valentini/698375/"
 # Select all games of the team
 games = calc_data %>% filter(game_date > "2023-01-01" &  team == !!team | team == !!seleccion)
 games = games %>% distinct(game_date, team, .keep_all=TRUE)
@@ -32,5 +32,8 @@ player_stat = table(pg$result)
 team_w_stat = table(games_w$result)
 
 as.numeric(team_stat["p1"]) + as.numeric(team_stat["d"])
+# stats with the player
 table(pg$result)
+
+# stats without the player
 table(games_w$result)

@@ -32,9 +32,9 @@ library(htmltools)
 
 ###
 ```{r echo=FALSE}
-inp_data <- readRDS("data/lastSW26082023.RData")
+inp_data <- readRDS("data/lastSW24092023.RData")
 # filter by DATE !!!
-inp_data = inp_data %>% filter(game_date > "2023-08-24"  & min > 0 & competition == "Liga Profesional Argentina")
+inp_data = inp_data %>% filter(game_date > "2023-09-17"  & min > 0 & competition == "Liga Profesional Argentina")
 htmltools::tags$link(
   href = "https://fonts.googleapis.com/css?family=Karla:400,700|Fira+Mono&display=fallback",
   rel = "stylesheet"
@@ -52,20 +52,20 @@ ctd = ctd %>% arrange(desc(PlayerRateAfter))
 # top_n
 # ctd[1:10,]$photo = c("bjadvincula", "bjgfernandez", "bjvilla","bjfigal","bjvarela","bjoromero", "ccrius", "dyjasoto", "dyjunsain", "dyjlopez", "ejrodriguez", "eandujar","ezuqui", "hgsoto", "nobsforza","pmacagno","rparmani", "rpcasco", "rppdiaz", "rpperez" "rhauche",  "rmoreno", "rpiovi", "rsigali", "rinsua","slhernandez", "slcerutti", "slgiay", "slgattoni" "slbatalla" "slelias", "talvillagra", "tluciatti", "tcastro" ,   "talfranco", "talsosa")
 #TOP 15
-ctd[1:15,]$photo = c( "rpcasco","dyjasoto","slhernandez","rpbarco","rparmani",
-                       "ccrius","rppdiaz","talsosa", "slgiay","bjgfernandez",
-                      "rpperez","rpiovi", "llema", "rpgonzalez",  "rpaliendro")
+ctd[1:15,]$photo = c( "dyjasoto","rpcasco","slhernandez", "bjfigal", "dyjlopez",
+                      "bjgfernandez", "rpbarco", "rppdiaz","slgiay", "dyjtripichio",
+                      "rparmani", "dyjtogni", "slbatalla", "slelias","rpiovi")
                        
-ctd[1:15,]$Position = c("Def", "Def", "Def", "Med", "Arq",
-                        "Med", "Def", "Med", "Med", "Med",
-                        "Med", "Def", "Def", "Def", "Med")
+ctd[1:15,]$Position = c("Def", "Def", "Def", "Def", "Med",
+                        "Med", "Med", "Def", "Med", "Def",
+                        "Arq", "Del", "Arq", "Med", "Def")
 
 #                                       +1 because of hours difference
 # add valor de mercado
 ctd$value = ""
-ctd[1:15,]$value = c("€1.0m","€1.5m","€4.0m","€8.5m","€2.2m",
-                     "€0.2m","€4.0m","€4.8m","€4.5m","€2.0m",
-                     "€1.0m","€1.7m","€1.5m","€1.2m","€2.0m")
+ctd[1:15,]$value = c("€1.5m","€1.0m","€4.0m","€4.0m","€1.2m",
+                     "€2.0m","€8.5m","€4.0m","€4.5m","€1.3m",
+                     "€2.2m","€2.5m","€3.5m","€2.8m","€1.7m")
 
 top_n = ctd[1:15,]
 

@@ -3,6 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(ISLR)
 library(caret)
+library(progress)
 #Explorations
 
 qq = calc_data %>% filter(game_date > "2023-02-23" & competition == "Liga Profesional Argentina" & min > 0)
@@ -105,30 +106,6 @@ amerged_df$min[!is.na(amerged_df$amin)] <- amerged_df$amin[!is.na(amerged_df$ami
 amerged_df$rc <- ifelse(is.na(amerged_df$ae), NA, 1)
 t_away = amerged_df[,1:4]
 
-
-# team rate test
-
-sum(current_game$PlayerRateBefore * (current_game$min_rc/game_min))/ sum(current_game$min_rc/game_min)
-sum(current_game$PlayerRateAfter * (current_game$min/game_min))/ sum(current_game$min/game_min)
-
-
-po = diff*11
-total_min = 11*game_min
-min_cost = po/total_min
-
-
-rcb = 0
-rcb_index = which(current_game$rc == "1")  
-rcb = sum(abs(diff * (game_min - current_game[rcb_index,]$min)/game_min))
-rest_min = game_min * 10
-min_bonus = rcb/rest_min
-  
-current_game = current_game %>% 
-  mutate(PlayerRateAfter=NA) %>%
-  mutate(PlayerRateAfter=ifelse(rc==1, current_game$PlayerRateBefore + min_cost * current_game$min - rcb,PlayerRateAfter)) %>%
-  mutate(PlayerRateAfter=ifelse(rc==0, current_game$PlayerRateBefore + min_cost * current_game$min + min_bonus*current_game$min*2,PlayerRateAfter)) 
-
-
 ## find young players
 
 qq = merge(all_last_p_rates, big_pl_data, by.x  = "link", by.y = "shortURL")
@@ -137,124 +114,94 @@ qq3 = qq2 %>% filter(game_date > "2023-03-01")
 
 
 
-#### Logic regression
+
+
+
+
+
+############# !!!!!!!!!!!!!!!! ########################
+############# Logic regression ########################
+############# !!!!!!!!!!!!!!!! ########################
 
 # read calc_data
 
-calc_data = readRDS("data/calc_data22032023.RData")
+calc_data2 = readRDS("data/calc_data04112023.RData")
 #calc_data = na.omit(calc_data)
-calc_data$result[calc_data$result == "l"] <- 0
-calc_data$result[calc_data$result == "d"] <- .5
-calc_data$result[calc_data$result == "w"] <- 1
-calc_data$result = as.numeric(calc_data$result)
+calc_data2$result[calc_data2$result == "l"] <- 0
+calc_data2$result[calc_data2$result == "d"] <- .5
+calc_data2$result[calc_data2$result == "w"] <- 1
+calc_data2$result[calc_data2$result == "p1"] <- 1
+calc_data2$result[calc_data2$result == "p0"] <- 0
+calc_data2$result = as.numeric(calc_data2$result)
 
-calc_data$diff = calc_data$RivalRateBefore - calc_data$TeamRateBefore
-ggplot(calc_data, aes(x=diff, y=result)) + 
-  geom_jitter(width = 0, height = 0.05) +
-  geom_smooth(method="glm",  method.args = list(family="binomial"))  + 
-  labs(x = "Team Elo difference", y = "Win probability") +
-  facet_wrap(~ team) 
+mdata = unique(calc_data2[c("game_date", "team", "rival","TeamRateBefore", "RivalRateBefore", "result", "is_home")])
+mdata$RatingRatio = mdata$TeamRateBefore / mdata$RivalRateBefore
+mdata$RatingDiff = mdata$TeamRateBefore - mdata$RivalRateBefore
+#make this example reproducible
+set.seed(1)
 
+#use 70% of dataset as training set and 30% as test set
+sample <- sample(c(TRUE, FALSE), nrow(mdata), replace=TRUE, prob=c(0.7,0.3))
+train  <- mdata[sample, ]
+test   <- mdata[!sample, ]
 
-# Team plots
-team_data = calc_data[,c("game_date", "team", "TeamRateBefore", "RivalRateBefore", "result","diff")]
-team_data = team_data[!duplicated(team_data), ]
-team_data = team_data %>% filter(team_data$team == "Godoy Cruz")
+# Summarize the model
+model <- glm(result ~ PlayerRateBefore + TeamRateBefore + RivalRateBefore + is_home,family=binomial(link='logit'),data=train)
+summary(model)
 
-y = team_data$result
-xDiff = team_data$diff
-xTeam = as.factor(team_data$team)
-xLink = as.factor(team_data$link)
-logR = glm(formula = y ~ xDiff, family = binomial(link = "logit"))
-predict(logR, data.frame(xDiff=0), type = "response")
-logR_probs = data.frame(probs = predict(logR, type="response"))
-head(logR_probs)
+# Make predictions
+probabilities <- model %>% predict(test, type = "response")
+predicted.classes <- ifelse(probabilities > 0.66, "1", ifelse(probabilities > 0.33, "0.5", "0"))
+test$predicions = predicted.classes
+# Model accuracy
+mean(predicted.classes == test$result)
 
-qplot(diff, result,  data = team_data, alpha = .02)
-## Team plots
-
-
-ggplot(team_data, aes(x=diff, y=result)) + 
-  geom_jitter(width = 0, height = 0.05) +
-  geom_smooth(method="glm",  method.args = list(family="binomial"))  + 
-  labs(x = "Diferencia de Elo rating respecto al rival", y = "Probabilidad de ganar") +
-  facet_wrap(~ team) 
-
-## Personal plots
-p_data = calc_data %>% filter(calc_data$player == "A. Soto" & min > 0)
-qplot(diff, result,  data = p_data, alpha = .02)
-
-inTrain <- createDataPartition(y=calc_data$result, p=.7, list = FALSE)
-trainig <- calc_data[inTrain,]
-testing <- calc_data[-inTrain,]
-
-fit.control <- trainControl(method = "repeatedcv", number = 5, repeats = 10)
-
-set.seed(123)  
-fit <- train(result ~ diff, data = trainig, method = "glm", 
-             family = "binomial", trControl = fit.control)
-fit$finalModel
-print(fit)
-
-pred = predict(fit, testing)
-qplot(result, pred, data = testing)
+plot(probabilities, test$result)
 
 
 
 
-y = p_data$result
+afl <- aflodds[,c(2,3,4,7)]
+train <- afl[afl$Week <= 80,]
+test <- afl[afl$Week > 80,]
+robj <- elo(train)
+pvals <- as.numeric(predict(robj, test))
+test$pc <- ifelse(pvals > 0.66, "1", ifelse(pvals > 0.33, "0.5", "0"))
+
+test = na.omit(test)
 
 
-xDiff = p_data$diff
-xMin = p_data$min
-xTeam = as.factor(p_data$team)
-xLink = as.factor(p_data$link)
-logPer = glm(formula = y ~ xDiff + xLink, family = binomial(link = "logit"))
-summary(logPer)
-library(effects)
-all.effects <- allEffects(mod = logPer)
-summary(all.effects)
-plot(all.effects, type = "response", ylim = c(0, 1))
+## Mejor rendimiento de los últimos 3 meses
+# Filter data by time
+cur_calc = calc_data %>% filter(game_date > "2023-09-30")
 
-ggplot(p_data, aes(x=diff, y=result)) + 
-  geom_jitter(width = 0, height = 0.05) +
-  geom_smooth(method="glm",  method.args = list(family="binomial"))  + 
-  labs(x = "Age", y = "P(Survival)") +
-  facet_wrap(~ team) 
+# Create a data fram of unique players
+players_unique = unique(cur_calc[c("link")])
+players_unique$dif = ""
+players_unique$dif = as.numeric(players_unique$dif)
 
+pb <- progress_bar$new(format = "(:spin) [:bar] :percent [Elapsed time: :elapsedfull || Estimated time remaining: :eta]",
+                        total = nrow(players_unique),
+                        complete = "=",   # Completion bar character
+                        incomplete = "-", # Incomplete bar character
+                        current = ">",    # Current bar character
+                        clear = FALSE,    # If TRUE, clears the bar when finish
+                        width = 100)      # Width of the progress bar
 
-a = p_data$result
-b = p_data$diff
-logPer = glm(formula = a ~ b, family = "binomial")
+# Going through all of the players to calculate the difference
+for (i in 1:nrow(players_unique)){
+  pb$tick()
+  player_calc = cur_calc %>% filter(link == players_unique[i,1]) %>% arrange(game_date)
+  players_unique$dif[i] = tail(player_calc$PlayerRateAfter, n=1) - player_calc$PlayerRateAfter[1]
+  
+}
 
+# top1
+players_unique = players_unique %>% arrange(desc(dif))
 
-
-realDiff = data.frame(a = 50)
-pr = predict(logPer, newdata = data.frame(b = -100))
-
-ggplot(data=p_data, aes(logPer$residuals)) +
-  geom_histogram(binwidth = 1, color = "black", fill = "purple4") +
-  theme(panel.background = element_rect(fill = "white"),
-        axis.line.x=element_line(),
-        axis.line.y=element_line()) +
-  ggtitle("Histogram for Model Residuals")
-
-
-
-library(dplyr)
-
-# Создаем новый датафрейм с пустыми строками
-out_data_new <- out_data %>%
-  mutate(
-    logo_home = ifelse(row_number() %% 2 == 0, NA, logo_home),
-    elo_home = ifelse(row_number() %% 2 == 0, NA, elo_home),
-    dif_home = ifelse(row_number() %% 2 == 0, NA, dif_home),
-    team_home = ifelse(row_number() %% 2 == 0, NA, team_home),
-    points_home = ifelse(row_number() %% 2 == 0, NA, points_home),
-    tire = ifelse(row_number() %% 2 == 0, NA, tire),
-    points_away = ifelse(row_number() %% 2 == 0, NA, points_away),
-    team_away = ifelse(row_number() %% 2 == 0, NA, team_away),
-    elo_away = ifelse(row_number() %% 2 == 0, NA, elo_away),
-    dif_away = ifelse(row_number() %% 2 == 0, NA, dif_away),
-    logo_away = ifelse(row_number() %% 2 == 0, NA, logo_away)
-  )
+pers_perf = cur_calc %>% filter(link == players_unique$link[1])
+#pers_perf = pers_perf[-4,]
+pers_perf$dif = pers_perf$PlayerRateAfter - pers_perf$PlayerRateBefore
+pers_perf = pers_perf[,c("player", "game_date", "team", "rival", "result", "PlayerRateAfter", "dif" )]
+cur_calc = cur_calc[!duplicated(cur_calc), ]
+write.csv(pers_perf, "data/pers_perf.csv")

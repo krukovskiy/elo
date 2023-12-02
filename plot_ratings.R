@@ -14,7 +14,7 @@ library(ggimage)
 library(data.table)
 
 # Load rating data
-rating_data = readRDS("data/calc_data12072023.RData")
+rating_data = readRDS("data/calc_data17092023.RData")
 
 # Add necessary fonts
 font_add_google("Open Sans", family = "special")
@@ -46,9 +46,12 @@ all_last_p_rates = all_last_p_rates[!duplicated(all_last_p_rates), ]
 
 all_last_p_rates$team = as.factor(all_last_p_rates$team)
 
+# filter by league
+all_last_p_rates_filtred = all_last_p_rates %>% filter(competition == ("Liga Profesional Argentina") | competition == "Copa Argentina")
+
 # Plot all season graph
 ggplot() +
-  geom_point(data = all_last_p_rates,
+  geom_point(data = all_last_p_rates_filtred,
              aes(
                x = reorder(team, PlayerRateAfter),
                y = PlayerRateAfter,
@@ -66,14 +69,14 @@ ggplot() +
 
 
 # Filter by date
-last_data = rating_data %>% filter(game_date >= "2023-01-01")
+last_data = rating_data %>% filter(game_date >= "2023-08-01")
 
 # Make team as factor
 last_data$team = as.factor(last_data$team)
 
 #### COUNT PLAYER INDIVIDUAL GRAPH
 player_name = "M. Casco"
-player_rate = rating_data %>% filter(player == player_name & game_date >= "2022-01-01") %>%  arrange(desc(game_date))
+player_rate = rating_data %>% filter(player == player_name & game_date >= "2023-01-01") %>%  arrange(desc(game_date))
 
 ### Draw with boca juniors colors
 
@@ -110,13 +113,12 @@ myPlot2 = ggplot(data = player_rate, aes(x = game_date)) +
                      breaks=c(player_name, 'River Plate'),
                      values=c('M. Casco'= "#eb192e", 'River Plate'='#000000')) +
   scale_fill_manual(values = c("#eb192e", "#000000")) +
-  ylim(c(1470,1890)) +
+  ylim(c(1470,1930)) +
   labs(title = "Personal rating over team rating after regular season 2022, 
 Liga Profesional de Fútbol",
        x = "Date",
        y = "Rating",
-       colour = "Team"
-  )
+       colour = "Team")
 
 #transition_reveal(game_date)
 #animate(myPlot, duration = 5, fps = 20, width = 900, height = 800, renderer = gifski_renderer())
@@ -153,7 +155,7 @@ tr = distinct(team_date, game_date, .keep_all = T)
 ## Plot Racing Top3 Players
 
 # Count team
-team_name = "River Plate"
+team_name = "Huracán"
 rtop = all_last_p_rates %>% filter(team == team_name) %>% arrange(player)
 barplot(rtop$PlayerRateAfter, names.arg=rtop$player, ylim = c(1420, 1880), xpd = F, 
         las = 2)
@@ -189,7 +191,7 @@ ggplot(rtop)+
   
   theme(axis.text.x=element_text(angle=90,hjust=1)) +
   scale_fill_manual(values=c("#6f6f6f", '#029cdc')) +
-  coord_cartesian(ylim = c(1470, 1670)) +
+  coord_cartesian(ylim = c(1470, 1910)) +
   geom_hline(yintercept = last_team_average, col = '#ffffff', size = 1.7) +
   geom_hline(yintercept = last_team_average, col = '#1893c6', size = .4) +
   annotate("text", x=4.82, y=last_team_average + 6, label= "Racing Club Current", col = '#1893c6') +
